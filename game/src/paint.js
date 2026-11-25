@@ -270,3 +270,27 @@ export function meter(ctx, x, y, w, h, progress, color, track) {
   panel(ctx, x, y, w, h, h / 2, track);
   if (progress > 0) panel(ctx, x, y, w * Math.min(1, progress), h, h / 2, color);
 }
+
+export function drawWoodGrain(ctx, x, y, w, h) {
+  for (let i = 0; i < 13; i++) {
+    const top = y + 4 + i * (h - 11) / 13;
+    const start = x + (i * 41) % 61;
+    const end = x + w - (i * 17) % 48;
+    ctx.beginPath();
+    ctx.moveTo(start, top);
+    ctx.bezierCurveTo(start + 29, top - 7, end - 50, top + 8, end, top + 2);
+    ctx.strokeStyle = i % 2 ? '#80523439' : '#ffe4b358';
+    ctx.lineWidth = i % 3 ? 1 : 1.6;
+    ctx.stroke();
+  }
+  oval(ctx, x + w * .73, y + h * .71, 14, 4, null, '#8d57384d', 1);
+}
+
+export function drawKitchenSign(ctx, name, x, y, width, height, { size = 22, prep, prepSize = 11 } = {}) {
+  const title = name.toUpperCase();
+  ctx.font = `800 ${size}px system-ui`;
+  const w = width ?? Math.ceil(ctx.measureText(title).width) + 24;
+  panel(ctx, x, y, w, height, height / 2, '#222d27', '#ba9065', 1);
+  label(ctx, title, x + w / 2, y + (prep ? 11 : height / 2), size, palette.light, { align: 'center' });
+  if (prep) label(ctx, prep, x + w / 2, y + 27, prepSize, '#e8bf88', { align: 'center' });
+}
