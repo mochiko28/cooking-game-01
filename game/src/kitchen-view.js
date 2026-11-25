@@ -382,12 +382,16 @@ function drawSizzle(ctx, motion) {
   oval(ctx, x - 10, y - 7, 1.8, 1.8, '#ffbe73');
 }
 
+export function platingRecipe(state) {
+  const choices = matchingRecipes(state.layers);
+  const focus = focusedTicket(state)?.recipe;
+  return choices.includes(focus) ? focus : choices.find(option => state.orders.some(ticket => ticket.recipe === option)) ?? choices[0];
+}
+
 function drawPlating(ctx, state) {
   const { layers, queuedPlate } = state;
   const cover = state.shot === 'cover';
-  const choices = matchingRecipes(layers);
-  const focus = focusedTicket(state)?.recipe;
-  const recipe = choices.includes(focus) ? focus : choices.find(option => state.orders.some(ticket => ticket.recipe === option)) ?? choices[0];
+  const recipe = platingRecipe(state);
   const resting = queuedPlate && !layers.length;
   panel(ctx, 589, 619, 182, 109, 7, '#41665a', '#31493d');
   for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[597, y], [763, y]]);

@@ -4,6 +4,7 @@ import {
   comboMultiplier, readShiftClock, serviceWave, serviceWaves, shiftLength, shiftStars,
 } from './shift.js';
 import { ingredients } from './stations.js';
+import { platingRecipe } from './kitchen-view.js';
 import { drawDish, drawIngredient, label, meter, oval, palette, panel, stroke } from './paint.js';
 
 export function drawServiceHud(ctx, state) {
@@ -103,12 +104,15 @@ function drawOrderBoard(ctx, state) {
   panel(ctx, 20, 92, 1240, 112, 12, '#203930', '#725d47', 2);
   const focus = focusedTicket(state);
   const cover = state.shot === 'cover';
+  const link = state.screen === 'play' && state.layers.length && state.orders.length >= 2 ? sharedPrepLink(state) : null;
   label(ctx, 'ORDER BOARD', 37, 106, cover ? 24 : 21, palette.light);
   if (!cover && focus && state.showRoute) {
     oval(ctx, 218, 106, 4, 4, palette.gold);
     label(ctx, `NEXT ROUTE  /  ${focus.recipe.name.toUpperCase()}`, 230, 106, 15, palette.gold);
   }
-  label(ctx, `${state.orders.length} / ${ticketCapacity} TICKETS`, cover ? 1092 : 1242, 106, cover ? 19 : 16, '#ced8bd', { align: 'right' });
+  if (!link) {
+    label(ctx, `${state.orders.length} / ${ticketCapacity} TICKETS`, cover ? 1092 : 1242, 106, cover ? 19 : 16, '#ced8bd', { align: 'right' });
+  }
   for (let i = 0; i < ticketCapacity; i++) {
     const x = ticketRailX + ticketSpacing * i;
     const ticket = state.orders[i];
@@ -116,6 +120,42 @@ function drawOrderBoard(ctx, state) {
     else if (ticket) drawTicket(ctx, ticket, x, ticket === focus, cover ? state.coverMotion : null);
     else panel(ctx, x, ticketY, ticketWidth, ticketHeight, 7, '#19322a', '#416253');
   }
+  if (link) drawSharedPrepLink(ctx, link, cover);
+}
+
+function sharedPrepLink(state) {
+  const recipe = platingRecipe(state);
+  const { orders } = state;
+  const active = orders.findIndex(ticket => ticket.recipe === recipe && ticket.left > 0);
+  // Prefer the upcoming layers so the label can point to the prep shown at the counter.
+  const layers = [...recipe.layers.slice(state.layers.length), ...state.layers];
+  for (const ingredient of layers) {
+    const matching = orders.flatMap((ticket, index) => ticket.left > 0 && ticket.recipe.layers.includes(ingredient) ? [index] : []);
+    const first = matching.includes(active) ? active : matching[0];
+    if (first === undefined) continue;
+    for (const second of matching) {
+      const multiplier = comboBonusForSharedPrep(orders[first].recipe, orders[second].recipe);
+      if (multiplier > 1) return { first, second, ingredient, multiplier };
+    }
+  }
+  return null;
+}
+
+function drawSharedPrepLink(ctx, { first, second, ingredient, multiplier }, cover) {
+  const title = `SHARED ${ingredients[ingredient].name.toUpperCase()} → ${multiplier}× TIPS`;
+  ctx.font = '800 23px system-ui';
+  const width = Math.ceil(ctx.measureText(title).width) + 26;
+  const start = ticketRailX + Math.min(first, second) * ticketSpacing + ticketDishX;
+  const end = ticketRailX + Math.max(first, second) * ticketSpacing + ticketDishX;
+  const badgeX = Math.min((cover ? 1108 : 1242) - width, Math.max(cover ? 218 : 575, (start + end - width) / 2));
+  const badgeCenter = badgeX + width / 2;
+  const railY = ticketY - 3;
+  const bracket = [[start, ticketY + 12], [start, railY], [end, railY], [end, ticketY + 12]];
+  stroke(ctx, palette.night, 9, bracket);
+  stroke(ctx, palette.mint, 5, bracket);
+  if (badgeCenter > end) stroke(ctx, palette.mint, 5, [[end, railY], [badgeCenter, railY]]);
+  panel(ctx, badgeX, 92, width, 24, 6, '#e3fa99');
+  label(ctx, title, badgeCenter, 104, 23, palette.ink, { align: 'center' });
 }
 
 function drawIncoming(ctx, ticket, x, motion) {
@@ -150,7 +190,7 @@ function drawTicket(ctx, ticket, x, focused, motion = null) {
   const outline = urgent ? '#f28b67' : focused ? '#ffba4e' : '#998264';
   panel(ctx, x, y, ticketWidth, ticketHeight, 6, color, outline, urgent || focused ? 4 : 1.5);
   panel(ctx, x + 7, y + 7, 63, 55, 6, ticket.recipe.color);
-  drawDish(ctx, ticket.recipe.layers, x + 38, y + 34, .51, ticket.recipe.color, ticket.recipe.shape);
+  drawDish(ctx, ticket.recipe.layers, x + ticketDishX, y + 34, .51, ticket.recipe.color, ticket.recipe.shape);
   label(ctx, ticket.recipe.name, x + 79, y + 20, motion === null ? 22 : vip ? 24 : 26, palette.ink);
   const iconSpacing = cover ? 57 : 38;
   ticket.recipe.layers.forEach((id, index) => {
@@ -195,6 +235,7 @@ const ticketY = 119;
 const ticketSpacing = 304;
 const ticketWidth = 292;
 const ticketHeight = 79;
+const ticketDishX = 38;
 
 export function renderScreen(element, state) {
   element.hidden = state.screen === 'play';
