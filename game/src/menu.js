@@ -93,10 +93,11 @@ function resultsScreen(state) {
   const waveChart = `<section class="wave-chart" aria-label="Dishes served per wave">
     ${showcase ? '' : '<h2>Dishes per wave</h2>'}
     <ul>
-      ${serviceWaves.map((wave, index) => `<li>
-        <span>${showcase ? wave.name.replace('Dinner ', '') : wave.name}</span>
-        <div class="wave-track" aria-hidden="true"><i style="width:${100 * state.servedByWave[index] / waveMax}%;background:${wave.color}"></i></div>
+      ${serviceWaves.map((wave, index) => `<li style="--wave-color:${wave.color}">
+        <span class="wave-name">${showcase ? wave.name.replace('Dinner ', '') : wave.name}</span>
+        <span class="wave-cadence">Order every <b>${wave.interval}s</b></span>
         <strong>${state.servedByWave[index]}</strong>
+        <div class="wave-track" aria-hidden="true"><i style="width:${100 * state.servedByWave[index] / waveMax}%"></i></div>
       </li>`).join('')}
     </ul>
   </section>`;

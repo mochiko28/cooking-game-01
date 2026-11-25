@@ -290,7 +290,7 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .results-sheet h1 { font-size: 88px; }
 .result-overview {
   display: grid;
-  grid-template-columns: 1.16fr 1fr;
+  grid-template-columns: 1fr 1.32fr;
   gap: 28px;
   align-items: center;
   margin: 26px 0 23px;
@@ -315,15 +315,16 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .wave-chart ul { display: grid; gap: 12px; margin: 12px 0 0; padding: 0; list-style: none; }
 .wave-chart li {
   display: grid;
-  grid-template-columns: 176px 1fr auto;
+  grid-template-columns: 1fr 1.4fr auto;
   align-items: center;
-  gap: 9px;
+  gap: 6px 15px;
   font-size: 28px;
   font-weight: 750;
   line-height: 1;
 }
-.wave-track { height: 24px; border-radius: 4px; background: #3b5042; }
-.wave-track i { display: block; height: 100%; border-radius: inherit; }
+.wave-name, .wave-cadence b { color: var(--wave-color); }
+.wave-track { grid-column: 1 / -1; height: 6px; border-radius: 4px; background: #3b5042; }
+.wave-track i { display: block; height: 100%; border-radius: inherit; background: var(--wave-color); }
 .wave-chart strong { text-align: right; min-width: 20px; }
 .stars .earned { color: #ffd17b; text-shadow: 0 5px #9f633d, 0 0 24px #f2a65e55; }
 .receipt {
@@ -345,8 +346,8 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   width: 1248px;
   height: 768px;
   display: grid;
-  grid-template-rows: 110px 221px 1fr auto;
-  gap: 16px;
+  grid-template-rows: 108px 205px 1fr auto;
+  gap: 13px;
   padding: 18px 22px;
 }
 .results-showcase header {
@@ -370,18 +371,18 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   line-height: 1;
   text-transform: uppercase;
 }
-.results-showcase .wave-chart { padding: 14px 20px; display: grid; align-items: center; }
-.results-showcase .wave-chart ul { gap: 12px; margin: 0; }
+.results-showcase .wave-chart { padding: 12px 24px; display: grid; align-items: center; }
+.results-showcase .wave-chart ul { gap: 13px; margin: 0; }
 .results-showcase .wave-chart li {
-  grid-template-columns: 300px 1fr 66px;
-  gap: 16px;
-  font-size: 53px;
+  grid-template-columns: 365px 1fr 86px;
+  gap: 5px 22px;
+  font-size: 56px;
   font-weight: 900;
-  text-transform: uppercase;
 }
-.results-showcase .wave-track { height: 49px; border-radius: 7px; }
+.results-showcase .wave-name { text-transform: uppercase; }
+.results-showcase .wave-track { height: 9px; }
 .results-showcase .wave-chart strong { font-size: 64px; text-align: center; }
-.results-showcase .primary { justify-self: center; padding: 7px 18px; }
+.results-showcase .primary { justify-self: center; padding: 4px 24px; font-size: 42px; line-height: 1; }
 .pause-sheet { text-align: center; width: 620px; padding: 48px 34px; }
 .pause-sheet .primary, .pause-sheet .quiet { margin: 27px 5px 0; }
 .visually-hidden {
