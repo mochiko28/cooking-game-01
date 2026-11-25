@@ -1,5 +1,5 @@
 // Draws the live order rail and maps ticket clicks to ticket numbers.
-import { label, meter, oval, panel, palette } from './canvas-ink.js';
+import { label, meter, oval, panel, palette } from './draw-primitives.js';
 import { drawDish } from './draw-dish.js';
 import { drawIngredient } from './draw-food.js';
 import { focusedTicket, ticketCapacity } from './order-board.js';

@@ -1,5 +1,5 @@
 // Renders individual ingredient art.
-import { oval, panel, stroke } from './canvas-ink.js';
+import { oval, panel, stroke } from './draw-primitives.js';
 
 export function drawIngredient(ctx, id, x, y, scale = 1, stage = 'raw') {
   ctx.save();

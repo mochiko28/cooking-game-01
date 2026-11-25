@@ -1,5 +1,5 @@
 // Draws ingredient crates, the wooden worktops, and the chopping and wash stations.
-import { label, meter, oval, panel, stroke } from './canvas-ink.js';
+import { label, meter, oval, panel, stroke } from './draw-primitives.js';
 import { drawIngredient } from './draw-food.js';
 import { drawCounterSign, drawCrateLabel, drawKitchenSign, drawStationSign } from './draw-labels.js';
 import { ingredients } from './ingredients.js';
@@ -25,7 +25,7 @@ function drawCrate(ctx, crate) {
 }
 
 function drawCrateContents(ctx, id, x, y) {
-  for (const [dx, dy, angle, scale] of [[-39, -5, -.13, .73], [37, -5, .13, .73], [0, 3, -.05, .91]]) {
+  for (const [dx, dy, angle, scale] of [[-41, -4, -.13, .82], [39, -4, .13, .82], [0, 2, -.05, 1.02]]) {
     ctx.save();
     ctx.translate(x + dx, y + dy);
     ctx.rotate(angle);

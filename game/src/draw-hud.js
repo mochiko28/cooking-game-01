@@ -1,5 +1,5 @@
 // Draws the stall name, wave indicator, shift countdown, and live tip multiplier.
-import { label, meter, oval, panel, palette, stroke } from './canvas-ink.js';
+import { label, meter, oval, panel, palette, stroke } from './draw-primitives.js';
 import { readShiftClock, shiftLength } from './shift-timer.js';
 import { serviceWave, serviceWaves } from './service-waves.js';
 import { comboMultiplier } from './combo-streak.js';
@@ -8,18 +8,12 @@ import { drawOrderBoard } from './draw-order-board.js';
 export function drawServiceHud(ctx, state) {
   const wave = serviceWave(state.elapsed);
   const waveName = wave.name.toUpperCase();
-  const index = serviceWaves.indexOf(wave);
   drawStallLantern(ctx, 57, 47);
-  if (state.shot === 'rush') {
-    label(ctx, waveName, 105, 49, 60, palette.light);
-  } else {
-    label(ctx, 'LANTERN & LADLE', 105, 42, 43, palette.light, { face: 'Georgia, serif' });
-    label(ctx, 'NIGHT MARKET KITCHEN', 108, 71, 15, '#b9ceba');
-  }
+  label(ctx, 'LANTERN & LADLE', 105, 42, 43, palette.light, { face: 'Georgia, serif' });
+  label(ctx, 'NIGHT MARKET KITCHEN', 108, 71, 15, '#b9ceba');
 
   panel(ctx, 564, 15, 223, 69, 9, '#213e33', '#49675a');
-  const waveLabel = state.shot === 'rush' ? `WAVE ${index + 1} / ${serviceWaves.length}` : waveName;
-  label(ctx, waveLabel, 675, 36, 24, wave.color, { align: 'center' });
+  label(ctx, waveName, 675, 36, 24, wave.color, { align: 'center' });
   for (let i = 0; i < serviceWaves.length; i++) {
     const current = serviceWaves[i].start;
     const next = serviceWaves[i + 1]?.start ?? shiftLength;

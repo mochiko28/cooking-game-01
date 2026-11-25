@@ -1,6 +1,6 @@
 // Draws a dotted route from the cook and numbers the upcoming station visits.
-import { label, oval, panel, palette } from './canvas-ink.js';
-import { floorBounds } from './kitchen-layout.js';
+import { label, oval, panel, palette } from './draw-primitives.js';
+import { floorBounds, worktops } from './kitchen-layout.js';
 import { routeForTicket } from './ticket-route.js';
 
 export function drawRoute(ctx, state) {
@@ -8,14 +8,15 @@ export function drawRoute(ctx, state) {
   const stations = routeForTicket(state);
   if (!stations.length) return;
   const { cook } = state;
-  const points = stations.map(station => [station.standX, station.standY + (station.standY === floorBounds.bottom ? -18 : station.standY === floorBounds.top ? 12 : 0)]);
+  const showChopVisit = state.shot === 'cover';
+  const points = stations.map(routePoint);
+  if (showChopVisit) points.unshift(routePoint(worktops[0]));
   ctx.save();
   ctx.beginPath();
-  ctx.moveTo(cook.x, cook.y + 20);
-  let from = [cook.x, cook.y + 20];
-  for (const to of points) {
-    const bend = (from[1] + to[1]) / 2 - Math.min(65, Math.abs(from[0] - to[0]) * .25);
-    ctx.quadraticCurveTo((from[0] + to[0]) / 2, bend, ...to);
+  let from = showChopVisit ? points[0] : [cook.x, cook.y + 20];
+  ctx.moveTo(...from);
+  for (const to of showChopVisit ? points.slice(1) : points) {
+    ctx.quadraticCurveTo(...routeSegment(from, to), ...to);
     from = to;
   }
   ctx.lineCap = 'round';
@@ -34,4 +35,13 @@ export function drawRoute(ctx, state) {
     else oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
     label(ctx, visits.join('·'), x, y + 1, 23, '#25342a', { align: 'center' });
   });
+}
+
+export function routePoint({ standX, standY }) {
+  const offset = standY === floorBounds.bottom ? -18 : standY === floorBounds.top ? 12 : 0;
+  return [standX, standY + offset];
+}
+
+export function routeSegment(from, to) {
+  return [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2 - Math.min(65, Math.abs(from[0] - to[0]) * .25)];
 }

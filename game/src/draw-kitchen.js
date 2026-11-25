@@ -1,5 +1,5 @@
 // Composes the kitchen room, stations, route, player, and prep effects.
-import { oval, panel, palette } from './canvas-ink.js';
+import { oval, panel, palette } from './draw-primitives.js';
 import { drawRoom } from './draw-floor-and-walls.js';
 import { drawFurniture } from './draw-stations.js';
 import { drawStove } from './draw-burners.js';

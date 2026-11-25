@@ -1,5 +1,5 @@
 // Paints the cook sprite, walking bounce, and carried ingredient.
-import { oval, panel, stroke } from './canvas-ink.js';
+import { oval, panel, stroke } from './draw-primitives.js';
 import { drawIngredient } from './draw-food.js';
 
 export function drawCook(ctx, state) {
@@ -8,6 +8,11 @@ export function drawCook(ctx, state) {
   ctx.save();
   ctx.translate(cook.x, cook.y - 5 + bob);
   ctx.scale(cook.facing * 1.43, 1.43);
+  if (state.shot === 'cover') {
+    stroke(ctx, '#ffdf968f', 2.5, [[-59, 5], [-44, 1]]);
+    stroke(ctx, '#ffedbfcc', 3, [[-49, -5], [-28, -9]]);
+    stroke(ctx, '#ffedbf88', 2, [[-42, 13], [-31, 10]]);
+  }
   oval(ctx, 0, 21, 27, 12, '#0c261f70');
   oval(ctx, -11, 18, 7, 8, '#26352c');
   oval(ctx, 10, 17, 7, 8, '#26352c');
@@ -23,10 +28,11 @@ export function drawCook(ctx, state) {
   oval(ctx, 9, -6, 2.3, 2.3, '#483428');
   stroke(ctx, '#a65940', 1.8, [[9, 0], [12, 0]]);
   if (cook.hand) {
-    oval(ctx, 36, 15, 25, 17, '#684b33');
-    oval(ctx, 36, 10, 24, 17, '#fff0d2', '#466e57');
-    drawIngredient(ctx, cook.hand.id, 36, 8, .75, cook.hand.stage);
-    oval(ctx, 18, 15, 5, 4, '#e3a773', '#67402d', 1.3);
+    oval(ctx, 38, 14, 27, 19, '#d8ae73', '#384439', 2);
+    oval(ctx, 38, 8, 28, 16, '#fff0d2', '#466e57');
+    oval(ctx, 38, 7, 23, 12, '#90714c');
+    drawIngredient(ctx, cook.hand.id, 38, 5, .85, cook.hand.stage);
+    oval(ctx, 17, 18, 7, 5, '#e3a773', '#67402d', 1.3);
   }
   ctx.restore();
 }

@@ -1,5 +1,5 @@
 // Visualizes individual burners, simmer progress, and the last seconds before burning.
-import { label, meter, oval, panel } from './canvas-ink.js';
+import { label, meter, oval, panel } from './draw-primitives.js';
 import { drawIngredient } from './draw-food.js';
 import { drawSteam } from './draw-steam.js';
 import { burners } from './kitchen-layout.js';
@@ -33,7 +33,10 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed) {
     oval(ctx, 0, -8, 32, 14, broth);
     oval(ctx, -17, -11, 10, 2.4, '#fac987a0');
     const platingStage = phase === 'cooked' || (pot.food.id === 'egg' && pot.age >= 1) ? 'ready' : pot.food.stage;
+    ctx.save();
+    if (phase === 'burnt') ctx.filter = 'grayscale(.8) brightness(.56) sepia(.35)';
     drawIngredient(ctx, pot.food.id, 0, -8, .69, platingStage);
+    ctx.restore();
     drawSteam(ctx, 3, -13, elapsed, phase === 'burnt');
   }
   const colors = { empty: '#ead4ac', simmering: '#f7b66d', cooked: '#c8e49a', burnt: '#ff977d' };

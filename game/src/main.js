@@ -23,8 +23,10 @@ function renderServiceFrame(now) {
     routeButton.setAttribute('aria-pressed', String(state.showRoute));
   }
   if (state.shot === 'rush') drawRushView(kitchenContext, state);
-  else drawKitchen(kitchenContext, state);
-  drawServiceHud(kitchenContext, state);
+  else {
+    drawKitchen(kitchenContext, state);
+    drawServiceHud(kitchenContext, state);
+  }
   requestAnimationFrame(renderServiceFrame);
 }
 

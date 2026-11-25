@@ -1,5 +1,6 @@
 // Creates deterministic shift state and advances the simulation and player.
 import { shiftLength } from './shift-timer.js';
+import { serviceWaves } from './service-waves.js';
 import { spawnOrder, updateOrderBoard } from './order-board.js';
 import { walkCook, walkToStation } from './player-cook.js';
 import { holdToChop } from './chopping.js';
@@ -11,7 +12,7 @@ import { useStation } from './stations.js';
 export function createShift(seed, sound, announce) {
   const state = {
     elapsed: 0, screen: 'title', orders: [], nextTicket: 1, nextArrival: 14,
-    coins: 0, tips: 0, served: 0, missed: 0, combo: 0, bestCombo: 0,
+    coins: 0, tips: 0, served: 0, servedByWave: serviceWaves.map(() => 0), missed: 0, combo: 0, bestCombo: 0,
     focusedNumber: null, showRoute: true,
     cook: { x: 198, y: 419, facing: 1, moving: false, hand: null },
     board: { food: null, cuts: 0, mark: -10 },

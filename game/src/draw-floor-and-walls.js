@@ -1,5 +1,5 @@
 // Paints the kitchen shell, glazed floor tiles, and market stall trim.
-import { oval, panel, stroke } from './canvas-ink.js';
+import { oval, panel, stroke } from './draw-primitives.js';
 
 export function drawRoom(ctx) {
   if (!kitchenBackdrop) {

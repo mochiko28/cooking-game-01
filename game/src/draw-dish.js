@@ -1,5 +1,5 @@
 // Builds plated dishes from illustrated layers, lacquered broth, and ceramic rims.
-import { oval, stroke } from './canvas-ink.js';
+import { oval, stroke } from './draw-primitives.js';
 import { drawIngredient } from './draw-food.js';
 
 export function drawDish(ctx, layers, x, y, scale = 1, color = '#80bfa7', shape = 'bowl') {

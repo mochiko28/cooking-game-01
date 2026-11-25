@@ -1,5 +1,5 @@
 // Shows the assembly checklist, plated dishes, and the lit serving window.
-import { label, oval, panel, stroke } from './canvas-ink.js';
+import { label, oval, panel, stroke } from './draw-primitives.js';
 import { drawDish } from './draw-dish.js';
 import { drawKitchenSign } from './draw-labels.js';
 import { drawSteam } from './draw-steam.js';
@@ -13,10 +13,10 @@ export function drawPlating(ctx, state) {
   const focus = focusedTicket(state)?.recipe;
   const recipe = choices.includes(focus) ? focus : choices.find(option => state.orders.some(ticket => ticket.recipe === option)) ?? choices[0];
   const resting = queuedPlate && !layers.length;
-  panel(ctx, 592, 619, 174, 109, 7, '#41665a', '#31493d');
-  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[600, y], [758, y]]);
+  panel(ctx, 589, 619, 182, 109, 7, '#41665a', '#31493d');
+  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[597, y], [763, y]]);
   const bounce = Math.max(0, 1 - (state.elapsed - state.platePop) * 7) * .13;
-  drawDish(ctx, resting ? queuedPlate.layers : layers, 679, 666, 1.49 + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
+  drawDish(ctx, resting ? queuedPlate.layers : layers, 679, 659, 1.78 + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
   const checklist = resting ? queuedPlate : recipe;
   drawKitchenSign(ctx, resting ? 'ON TRAY' : layers.length ? 'DISH IN PROGRESS' : 'NEXT DISH',
     772, 618, 153, 22, { size: 14 });
@@ -39,29 +39,29 @@ export function drawPass(ctx, state) {
     return;
   }
 
-  drawReadyHalo(ctx, 1039, 669);
-  drawDish(ctx, state.ready.layers, 1039, 663, 1.46, state.ready.color, state.ready.shape);
-  drawSteam(ctx, 1039, 653, state.elapsed);
-  drawReadySparkles(ctx, 1039, 669, state.elapsed);
-  drawKitchenSign(ctx, 'Ready', 1125, 642, 92, 34, { size: 22 });
-  label(ctx, state.ready.name, 1171, 698, 16, '#ffe5b7', { align: 'center' });
+  drawReadyHalo(ctx, 1044, 665);
+  drawDish(ctx, state.ready.layers, 1044, 658, 1.75, state.ready.color, state.ready.shape);
+  drawSteam(ctx, 1044, 649, state.elapsed);
+  drawReadySparkles(ctx, 1044, 665, state.elapsed);
+  drawKitchenSign(ctx, 'Ready', 1138, 642, 82, 36, { size: 22 });
+  label(ctx, state.ready.name, 1179, 698, 16, '#ffe5b7', { align: 'center' });
 }
 
 function drawReadyHalo(ctx, x, y) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(1, .59);
-  const glow = ctx.createRadialGradient(0, 0, 55, 0, 0, 85);
-  glow.addColorStop(0, '#ffbb6800');
-  glow.addColorStop(.7, '#ffbe5a85');
+  const glow = ctx.createRadialGradient(0, 0, 45, 0, 0, 112);
+  glow.addColorStop(0, '#fff09b');
+  glow.addColorStop(.62, '#ffc35aab');
   glow.addColorStop(1, '#ffc45a00');
-  oval(ctx, 0, 0, 85, 85, glow);
-  oval(ctx, 0, 0, 80, 80, null, '#ffd281', 2.6);
+  oval(ctx, 0, 0, 112, 112, glow);
+  oval(ctx, 0, 0, 94, 94, null, '#ffdf8ac0', 3.5);
   ctx.restore();
 }
 
 function drawReadySparkles(ctx, x, y, elapsed) {
-  for (const [dx, dy, size, phase] of [[-75, -25, 8, 1], [-58, 33, 5, 3], [68, -31, 7, 5], [75, 24, 6, 6]]) {
+  for (const [dx, dy, size, phase] of [[-77, -34, 10, 1], [-71, 38, 7, 3], [75, -40, 9, 5], [83, 29, 8, 6]]) {
     ctx.save();
     ctx.translate(x + dx, y + dy);
     ctx.globalAlpha = .8 + .2 * Math.sin(elapsed * 4 + phase);

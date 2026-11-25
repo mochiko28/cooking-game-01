@@ -1,5 +1,5 @@
 // Renders station signs, ingredient labels, and the service controls strip.
-import { label, panel, palette } from './canvas-ink.js';
+import { label, panel, palette } from './draw-primitives.js';
 
 export function drawCounterSign(ctx) {
   drawKitchenSign(ctx, 'COUNTER INGREDIENTS', 51, 216, 302, 29);

@@ -1,4 +1,6 @@
 // Scores continuous service and applies a capped streak multiplier to tips.
+import { serviceWave, serviceWaves } from './service-waves.js';
+
 export function comboMultiplier(streak) {
   return Math.min(3, 1 + Math.max(0, streak - 1) * .5);
 }
@@ -8,6 +10,7 @@ export function recordService(state, ticket, vipBonus) {
   state.combo++;
   state.bestCombo = Math.max(state.bestCombo, state.combo);
   state.served++;
+  state.servedByWave[serviceWaves.indexOf(serviceWave(state.elapsed))]++;
   const tip = Math.floor((4 + 16 * freshness + vipBonus) * comboMultiplier(state.combo));
   const coins = 26 + ticket.recipe.layers.length * 6 + tip;
   state.tips += tip;
