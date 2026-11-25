@@ -1,12 +1,15 @@
-const speed = 365;
+// Moves the cook by keyboard or walks to a clicked station.
+import { floorBounds } from './kitchen-layout.js';
+
+const speed = 460;
 
 export function walkCook(state, dx, dy, dt) {
   const cook = state.cook;
   const length = Math.hypot(dx, dy);
   cook.moving = length > 0;
   if (!length) return;
-  cook.x = Math.max(65, Math.min(1165, cook.x + dx / length * speed * dt));
-  cook.y = Math.max(459, Math.min(523, cook.y + dy / length * speed * dt));
+  cook.x = Math.max(floorBounds.left, Math.min(floorBounds.right, cook.x + dx / length * speed * dt));
+  cook.y = Math.max(floorBounds.top, Math.min(floorBounds.bottom, cook.y + dy / length * speed * dt));
   if (dx) cook.facing = Math.sign(dx);
 }
 

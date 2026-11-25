@@ -1,3 +1,4 @@
+// Renders individual ingredient art.
 import { oval, panel, stroke } from './canvas-ink.js';
 
 function noodles(ctx) {
@@ -109,35 +110,5 @@ export function drawIngredient(ctx, id, x, y, scale = 1, stage = 'raw') {
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   painters[id](ctx, stage !== 'raw');
-  ctx.restore();
-}
-
-const placements = {
-  noodles: [-6, 0, 1.03], greens: [22, -10, .62], egg: [17, 9, .70],
-  tofu: [-20, 7, .67], shrimp: [-15, -8, .67], shrooms: [13, -6, .68],
-};
-
-export function drawDish(ctx, layers, x, y, scale = 1, color = '#80bfa7', shape = 'bowl') {
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  oval(ctx, 0, 14, 53, 26, '#14272248');
-  const depth = shape === 'bowl' ? 10 : 4;
-  oval(ctx, 0, depth, 53, 30, color, '#304c43', 2.5);
-  oval(ctx, 0, -1, 52, 29, '#fff0d2', '#355a4d', 2.5);
-  oval(ctx, 0, -1, 44, 22, layers.includes('broth') ? '#ba662f' : '#e5c9a1', '#d7ab79', 1.5);
-  if (layers.includes('broth')) {
-    ctx.beginPath();
-    ctx.ellipse(-2, -1, 38, 16, 0, 2.7, 5.4);
-    ctx.strokeStyle = '#efa85e';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  }
-  for (const id of layers) {
-    if (id === 'broth') continue;
-    const [px, py, size] = placements[id];
-    const solo = layers.length === 1;
-    drawIngredient(ctx, id, solo ? 0 : px, solo ? 0 : py, size, 'ready');
-  }
   ctx.restore();
 }

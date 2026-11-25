@@ -1,3 +1,4 @@
+// Dispatches station actions and handles ingredient pickup and clearing.
 import { ingredients, pickIngredient } from './ingredients.js';
 import { useChopBoard } from './chopping.js';
 import { useStove } from './cooking-stove.js';
@@ -15,11 +16,12 @@ export function useStation(state, station) {
     return `Picked up ${ingredients[station.id].name.toLowerCase()}.`;
   }
   if (station.id === 'chop') return useChopBoard(state);
-  if (station.id === 'stove') return useStove(state);
+  if (station.kind === 'burner') return useStove(state, station.index);
   if (station.id === 'plate') return assembleDish(state);
   if (station.id === 'pass') return serveReadyPlate(state);
   if (state.cook.hand) state.cook.hand = null;
   else if (state.layers.length) state.layers = [];
+  else if (state.queuedPlate) state.queuedPlate = null;
   else if (state.ready) state.ready = null;
   else return 'Use the sink to clear your hands or an unfinished dish.';
   state.sound('tick');

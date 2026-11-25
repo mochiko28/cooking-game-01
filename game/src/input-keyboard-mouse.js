@@ -1,3 +1,4 @@
+// Normalizes keyboard and pointer input into kitchen controls.
 import { stationAt } from './kitchen-layout.js';
 
 const up = ['KeyW', 'ArrowUp'];
@@ -5,7 +6,7 @@ const down = ['KeyS', 'ArrowDown'];
 const left = ['KeyA', 'ArrowLeft'];
 const right = ['KeyD', 'ArrowRight'];
 const use = ['KeyE', 'Space'];
-const actions = [...up, ...down, ...left, ...right, ...use, 'KeyR', 'KeyP', 'KeyM', 'Escape', 'Enter'];
+const actions = [...up, ...down, ...left, ...right, ...use, 'KeyR', 'KeyQ', 'KeyT', 'KeyP', 'KeyM', 'Escape', 'Enter'];
 
 export function bindKitchenInput(canvas, handlers) {
   const held = new Set();
@@ -19,22 +20,21 @@ export function bindKitchenInput(canvas, handlers) {
   window.addEventListener('keyup', event => held.delete(event.code));
   window.addEventListener('blur', () => held.clear());
 
-  function pointedStation(event) {
+  function canvasPoint(event) {
     const box = canvas.getBoundingClientRect();
-    return stationAt((event.clientX - box.left) * canvas.width / box.width,
-      (event.clientY - box.top) * canvas.height / box.height);
+    return [(event.clientX - box.left) * canvas.width / box.width,
+      (event.clientY - box.top) * canvas.height / box.height];
   }
 
   canvas.addEventListener('pointermove', event => {
-    const station = pointedStation(event);
-    canvas.style.cursor = station ? 'pointer' : '';
-    handlers.hover(station);
+    const [x, y] = canvasPoint(event);
+    handlers.hover(stationAt(x, y), x, y);
   });
-  canvas.addEventListener('pointerleave', () => handlers.hover(null));
-  canvas.addEventListener('click', event => {
-    const station = pointedStation(event);
-    if (station) handlers.click(station);
+  canvas.addEventListener('pointerleave', () => {
+    canvas.style.cursor = '';
+    handlers.hover(null, -1, -1);
   });
+  canvas.addEventListener('click', event => handlers.click(...canvasPoint(event)));
 
   const pressed = codes => Number(codes.some(code => held.has(code)));
   return {

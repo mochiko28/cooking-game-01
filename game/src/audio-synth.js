@@ -1,3 +1,4 @@
+// Synthesizes short local sound cues for movement through kitchen tasks.
 export function createKitchenAudio() {
   let context;
   let muted = false;
@@ -6,6 +7,7 @@ export function createKitchenAudio() {
     tick: [[520, 700, .07, 'sine']],
     ticket: [[540, 475, .12, 'triangle']],
     sizzle: [[140, 430, .24, 'sawtooth']],
+    warning: [[342, 290, .15, 'triangle']],
     burn: [[230, 86, .32, 'triangle']],
     ding: [[880, 930, .22, 'sine'], [1320, 1310, .25, 'sine', .065]],
     serve: [[660, 660, .16, 'sine'], [880, 880, .20, 'sine', .075], [1320, 1320, .28, 'sine', .15]],

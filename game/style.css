@@ -22,8 +22,8 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   display: flex;
   gap: 8px;
   position: absolute;
-  right: 45px;
-  bottom: 23px;
+  right: 30px;
+  bottom: 13px;
 }
 #service-buttons button, .quiet {
   border: 1px solid #719080;
@@ -34,6 +34,7 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   font-weight: 750;
 }
 #service-buttons button:hover, .quiet:hover { background: #3c6250; }
+#route-button[aria-pressed="true"] { background: #f6ca7e; color: #2d3024; border-color: #ffdda0; }
 kbd {
   display: inline-block;
   margin-left: 5px;
@@ -107,79 +108,95 @@ kbd {
   font-size: 18px;
 }
 .controls-card p span { color: #e8c99d; }
-.book-sheet { width: 1100px; padding: 30px 37px 33px; }
+.book-sheet {
+  width: 1208px;
+  padding: 31px 30px 33px;
+  background: #213e31;
+}
 .sheet-header { display: flex; justify-content: space-between; align-items: flex-start; }
-.menu-instructions { padding: 13px 0 19px; color: #e9cfab; font-size: 22px; }
-.recipe-list { display: grid; gap: 9px; }
+.book-sheet h1, .results-sheet h1 {
+  font: 900 67px/.95 system-ui, sans-serif;
+  letter-spacing: -.045em;
+  text-transform: uppercase;
+}
+.sheet .menu-instructions {
+  margin: 12px 0 21px;
+  color: #ffd081;
+  font-size: 39px;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+.recipe-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
 .recipe-row {
-  display: grid;
-  grid-template-columns: 306px 1fr;
-  min-height: 92px;
-  align-items: center;
   border-radius: 10px;
-  color: #24342a;
+  color: #26372c;
   background: #ffe9c7;
   overflow: hidden;
 }
 .recipe-title {
+  min-height: 111px;
   display: flex;
   align-items: center;
-  gap: 9px;
+  padding-right: 13px;
   background: var(--recipe-color);
-  min-height: 92px;
 }
-.recipe-title h2 { font: 700 27px Georgia, serif; }
+.recipe-title h2 { font: 850 37px/.97 system-ui, sans-serif; letter-spacing: -.04em; }
 .steps {
   display: flex;
-  align-items: center;
-  padding: 0 11px;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 5px 4px 9px;
+  min-height: 95px;
   margin: 0;
   list-style: none;
 }
-.steps li { position: relative; display: flex; align-items: center; gap: 4px; padding: 0 13px 0 0; }
-.steps li + li { padding-left: 9px; }
+.steps li { position: relative; flex: 1; min-width: 0; text-align: center; }
 .steps li + li::before {
   content: '›';
   position: absolute;
-  left: -6px;
+  left: -5px;
+  top: 8px;
   color: #996449;
-  font-size: 28px;
+  font-size: 26px;
   font-weight: 750;
 }
+.steps canvas { display: block; margin: 0 auto; }
 .steps b, .steps small { display: block; white-space: nowrap; }
-.steps b { font-size: 19px; }
-.steps small { font-size: 16px; color: #6b4a39; }
+.steps b { font-size: 17px; line-height: 1.08; }
+.steps small { font-size: 14px; font-weight: 650; color: #624534; }
+
 .results-sheet {
-  width: 963px;
+  width: 1160px;
   text-align: center;
-  padding: 47px 65px 46px;
-  background: radial-gradient(ellipse at center top, #415842, #253e32 69%);
+  padding: 46px 48px 43px;
+  background: radial-gradient(ellipse at center top, #496047, #253e32 69%);
 }
-.results-sheet h1 { font-size: 70px; }
+.results-sheet h1 { font-size: 88px; }
+.results-sheet .result-rank { margin-top: 9px; color: #f7dcad; font: 700 36px Georgia, serif; }
 .stars {
   display: flex;
   justify-content: center;
-  gap: 18px;
-  margin: 5px 0 21px;
-  color: #708476;
-  font-size: 64px;
-  line-height: 1.34;
+  gap: 24px;
+  margin: 8px 0 22px;
+  color: #7a8b7f;
+  font-size: 113px;
+  line-height: 1.15;
 }
-.stars .earned { color: #ffd17b; text-shadow: 0 4px #9f633d, 0 0 20px #f2a65e55; }
+.stars .earned { color: #ffd17b; text-shadow: 0 5px #9f633d, 0 0 24px #f2a65e55; }
 .receipt {
   background: #ffe9c8;
   border: 2px solid #e2b17d;
   color: #2a3c30;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   border-radius: 12px;
   padding: 19px 5px 22px;
 }
 .receipt div + div { border-left: 2px solid #d9b38c; }
 .receipt strong, .receipt span { display: block; }
-.receipt strong { font: 700 52px Georgia, serif; }
-.receipt span { font-size: 21px; font-weight: 800; }
-.results-sheet .receipt-details { color: #efdab9; font-size: 20px; margin: 20px 0 26px; }
+.receipt strong { font: 850 72px/.95 system-ui, sans-serif; }
+.receipt span { font-size: 29px; font-weight: 800; margin-top: 6px; }
+.results-sheet .receipt-details { color: #efdab9; font-size: 23px; margin: 20px 0 21px; }
 .receipt-details span { color: #e4a968; padding: 0 10px; }
 .pause-sheet { text-align: center; width: 620px; padding: 48px 34px; }
 .pause-sheet .primary, .pause-sheet .quiet { margin: 27px 5px 0; }

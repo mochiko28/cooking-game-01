@@ -1,6 +1,12 @@
+// Wires the canvas, menus, input, and animation frame into the playable game.
 import { createKitchenAudio } from './audio-synth.js';
 import { drawServiceHud } from './draw-hud.js';
+import { drawRushView } from './draw-rush-view.js';
+import { ticketAt } from './draw-order-board.js';
+import { focusNextTicket, focusedTicket } from './order-board.js';
+import { stationAt } from './kitchen-layout.js';
 import { drawKitchen } from './draw-kitchen.js';
+import { recipes } from './recipes.js';
 import { createShift, interact, updateShift } from './game-loop.js';
 import { bindKitchenInput } from './input-keyboard-mouse.js';
 import { renderScreen } from './screens-title-results.js';
@@ -12,6 +18,7 @@ const ctx = canvas.getContext('2d');
 const screen = document.querySelector('#screen');
 const announcement = document.querySelector('#announcement');
 const buttons = document.querySelector('#service-buttons');
+const routeButton = document.querySelector('#route-button');
 const soundButton = document.querySelector('#sound-button');
 const audio = createKitchenAudio();
 const query = new URLSearchParams(location.search);
@@ -33,7 +40,7 @@ function command(action) {
   audio.unlock();
   if (action === 'start') {
     state = newShift();
-    state.notice = 'Start Jade Noodles by pouring broth at the plating counter.';
+    state.notice = `Start ${recipes[0].name} by pouring broth at the plating counter.`;
     state.noticeUntil = 7;
     changeScreen('play');
   }
@@ -49,6 +56,10 @@ function command(action) {
     else if (state.screen === 'pause') changeScreen('play');
   }
   if (action === 'close') changeScreen(state.screen === 'recipes' ? previousScreen : 'play');
+  if (action === 'route') {
+    state.showRoute = !state.showRoute;
+    routeButton.setAttribute('aria-pressed', String(state.showRoute));
+  }
   if (action === 'sound') {
     const muted = audio.toggle();
     soundButton.setAttribute('aria-pressed', String(muted));
@@ -59,6 +70,12 @@ function command(action) {
 
 const input = bindKitchenInput(canvas, {
   key(code) {
+    if (code === 'KeyT' && state.screen === 'play') command('route');
+    if (code === 'KeyQ' && state.screen === 'play') {
+      focusNextTicket(state);
+      const ticket = focusedTicket(state);
+      if (ticket) announcement.textContent = `Focused ${ticket.recipe.name}.`;
+    }
     if (code === 'KeyR') command('recipes');
     if (code === 'KeyP') command('pause');
     if (code === 'KeyM') command('sound');
@@ -74,13 +91,23 @@ const input = bindKitchenInput(canvas, {
       interact(state);
     }
   },
-  click(station) {
+  click(x, y) {
     if (state.screen !== 'play' || state.staged) return;
-    audio.unlock();
-    state.mouseChop = false;
-    state.target = station;
+    const ticket = ticketAt(state, x, y);
+    if (ticket) {
+      state.focusedNumber = ticket.number;
+      announcement.textContent = `Focused ${ticket.recipe.name}.`;
+      return;
+    }
+    const station = stationAt(x, y);
+    if (station) {
+      audio.unlock();
+      state.mouseChop = false;
+      state.target = station;
+    }
   },
-  hover(station) {
+  hover(station, x, y) {
+    canvas.style.cursor = !state.staged && state.screen === 'play' && (station || ticketAt(state, x, y)) ? 'pointer' : '';
     if (!state.staged) state.hover = station;
   },
 });
@@ -91,6 +118,7 @@ screen.addEventListener('click', event => {
 });
 buttons.querySelector('#book-button').onclick = () => command('recipes');
 buttons.querySelector('#pause-button').onclick = () => command('pause');
+routeButton.onclick = () => command('route');
 soundButton.onclick = () => command('sound');
 document.addEventListener('visibilitychange', () => {
   if (document.hidden && state.screen === 'play' && !state.staged) changeScreen('pause');
@@ -110,9 +138,11 @@ function frame(now) {
   if (paintedScreen !== state.screen) {
     renderScreen(screen, state);
     paintedScreen = state.screen;
-    buttons.hidden = state.screen !== 'play';
+    buttons.hidden = state.screen !== 'play' || state.shot === 'rush';
+    routeButton.setAttribute('aria-pressed', String(state.showRoute));
   }
-  drawKitchen(ctx, state);
+  if (state.shot === 'rush') drawRushView(ctx, state);
+  else drawKitchen(ctx, state);
   drawServiceHud(ctx, state);
   requestAnimationFrame(frame);
 }

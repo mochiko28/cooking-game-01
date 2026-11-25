@@ -1,3 +1,4 @@
+// Creates deterministic shift state and advances the simulation and player.
 import { shiftLength } from './shift-timer.js';
 import { spawnOrder, updateOrderBoard } from './order-board.js';
 import { walkCook, walkToStation } from './player-cook.js';
@@ -19,9 +20,11 @@ export function createShift(seed, sound, announce) {
   const state = {
     elapsed: 0, screen: 'title', orders: [], nextTicket: 1, nextArrival: 14,
     coins: 0, tips: 0, served: 0, missed: 0, combo: 0, bestCombo: 0,
-    cook: { x: 340, y: 495, facing: 1, moving: false, hand: null },
-    board: { food: null, cuts: 0, mark: -10 }, pot: { food: null, age: 0 },
-    layers: [], ready: null, platePop: -10, particles: [], target: null, hover: null,
+    focusedNumber: null, showRoute: true,
+    cook: { x: 198, y: 419, facing: 1, moving: false, hand: null },
+    board: { food: null, cuts: 0, mark: -10 },
+    pots: Array.from({ length: 2 }, () => ({ food: null, age: 0 })),
+    layers: [], ready: null, queuedPlate: null, platePop: -10, particles: [], target: null, hover: null,
     mouseChop: false, notice: '', noticeUntil: 0, staged: false,
     random: randomSequence(seed), visualRandom: randomSequence(seed + 89), sound, announce,
   };
@@ -40,12 +43,14 @@ export function interact(state, station = nearbyStation(state.cook)) {
 }
 
 export function updateShift(state, dt, controls) {
+  const second = Math.ceil(shiftLength - state.elapsed);
   state.elapsed = Math.min(shiftLength, state.elapsed + dt);
   if (state.elapsed >= shiftLength) {
     state.screen = 'results';
     state.sound('serve');
     return;
   }
+  if (second <= 11 && Math.ceil(shiftLength - state.elapsed) < second) state.sound('warning');
   updateOrderBoard(state, dt);
   updateStove(state, dt);
   moveParticles(state, dt);

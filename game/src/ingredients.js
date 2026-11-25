@@ -1,3 +1,4 @@
+// Defines the pantry and which prep stages each ingredient requires.
 export const ingredients = {
   broth: { name: 'Broth', route: 'pour', hue: '#e69243' },
   noodles: { name: 'Noodles', route: 'cook', hue: '#f4c766' },

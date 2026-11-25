@@ -1,56 +1,54 @@
+// Stages fixed game states for the four deterministic presentation screenshots.
 import { spawnOrder } from './order-board.js';
 import { recipes } from './recipes.js';
 import { shiftLength } from './shift-timer.js';
-import { burst } from './particles.js';
 
 export function stageScreenshot(state, scene) {
   if (!['cover', 'rush', 'recipes', 'results'].includes(scene)) return;
-  const [garden, tide, gold, moon, ember] = recipes;
+  const [garden, tide, gold, moon, harvest, ember] = recipes;
   state.staged = true;
+  state.shot = scene;
   state.screen = 'play';
   state.elapsed = 94;
   state.orders = [];
-  state.nextTicket = 9;
+  state.nextTicket = 7;
   state.coins = 238;
   state.served = 4;
   state.combo = 3;
   state.layers = ['broth', 'noodles'];
   state.ready = tide;
-  state.pot = { food: { id: 'egg', stage: 'raw' }, age: 2.5 };
-  state.cook.x = 640;
-  state.cook.y = 495;
-  state.cook.hand = { id: 'greens', stage: 'ready' };
+  state.pots = [
+    { food: { id: 'egg', stage: 'raw' }, age: 2.8 },
+    { food: { id: 'shrimp', stage: 'raw' }, age: 9.7 },
+  ];
+  state.cook.x = 436;
+  state.cook.y = 432;
+  state.cook.facing = -1;
+  state.cook.hand = { id: 'greens', stage: 'raw' };
 
   if (scene === 'rush') {
-    state.elapsed = 158;
-    state.camera = 'prep';
+    state.elapsed = 113;
     state.coins = 466;
-    state.served = 8;
-    state.cook.x = 162;
-    state.cook.y = 511;
+    state.served = 7;
+    state.combo = 5;
+    state.pots.reverse();
+    state.pots[1] = { food: { id: 'noodles', stage: 'raw' }, age: 3.3 };
     state.cook.hand = null;
-    state.board = { food: { id: 'greens', stage: 'raw' }, cuts: 3, mark: state.elapsed - .07 };
-    state.pot = { food: { id: 'shrimp', stage: 'raw' }, age: 3.4 };
-    state.ready = null;
-    burst(state, 147, 609, '#e1eb91', 14);
-    for (const bit of state.particles) {
-      bit.x += bit.dx * .18;
-      bit.y += bit.dy * .18;
-    }
+    state.showRoute = false;
   }
 
-  const urgent = scene === 'rush';
-  [garden, tide, urgent ? ember : gold, moon].forEach((recipe, index) => {
-    const remaining = urgent ? [10, 17, 26, 36][index] : [30, 49, 23, 57][index];
-    spawnOrder(state, recipe, remaining, 64);
+  const rush = scene === 'rush';
+  [rush ? ember : garden, tide, rush ? harvest : gold, moon].forEach((recipe, index) => {
+    const left = (rush ? [10, 22, 26, 41] : [42, 49, 23, 57])[index];
+    spawnOrder(state, { recipe, left, patience: 64, vipLeft: index === 2 ? (rush ? 11 : 17) : undefined });
   });
   if (scene === 'recipes') state.screen = 'recipes';
   if (scene === 'results') {
     state.screen = 'results';
     state.elapsed = shiftLength;
     state.served = 9;
-    state.coins = 534;
-    state.tips = 136;
+    state.coins = 698;
+    state.tips = 302;
     state.bestCombo = 6;
     state.missed = 2;
   }

@@ -1,19 +1,28 @@
+// Defines kitchen furniture, walkable floor bounds, and interaction points.
 import { ingredients } from './ingredients.js';
 
+export const floorBounds = { left: 82, top: 372, right: 1158, bottom: 556 };
+
 export const pantry = Object.keys(ingredients).map((id, index) => ({
-  id, kind: 'ingredient', x: 36 + 174 * index, y: 341, w: 164, h: 102,
-  standX: 118 + 174 * index, standY: 467,
+  id, kind: 'ingredient', x: 45 + 172 * index, y: 252, w: 158, h: 92,
+  standX: 124 + 172 * index, standY: 372,
+}));
+
+export const burners = [0, 1].map(index => ({
+  id: `burner-${index + 1}`, kind: 'burner', index,
+  x: 296 + 138 * index, y: 582, w: 138, h: 156,
+  standX: 365 + 138 * index, standY: 556,
 }));
 
 export const worktops = [
-  { id: 'chop', label: 'CHOP BOARD', x: 36, y: 542, w: 253, h: 177, standX: 162, standY: 517 },
-  { id: 'stove', label: 'STOVE', x: 301, y: 542, w: 250, h: 177, standX: 426, standY: 517 },
-  { id: 'plate', label: 'PLATING COUNTER', x: 563, y: 542, w: 329, h: 177, standX: 727, standY: 517 },
-  { id: 'pass', label: 'SERVING WINDOW', x: 904, y: 542, w: 340, h: 177, standX: 1074, standY: 517 },
+  { id: 'chop', label: 'CHOP BOARD', x: 42, y: 582, w: 244, h: 156, standX: 164, standY: 556 },
+  { id: 'stove', label: 'STOVE', x: 296, y: 582, w: 276, h: 156 },
+  { id: 'plate', label: 'PLATING COUNTER', x: 582, y: 582, w: 352, h: 156, standX: 758, standY: 556 },
+  { id: 'pass', label: 'SERVING WINDOW', x: 944, y: 582, w: 294, h: 156, standX: 1091, standY: 556 },
 ];
 
-export const sink = { id: 'sink', label: 'SINK', x: 1180, y: 452, w: 64, h: 79, standX: 1158, standY: 511 };
-export const stations = [...pantry, ...worktops, sink];
+export const sink = { id: 'sink', label: 'SINK', x: 1180, y: 418, w: 58, h: 93, standX: 1158, standY: 465 };
+export const stations = [...pantry, ...burners, ...worktops.filter(station => station.id !== 'stove'), sink];
 
 export function stationAt(x, y) {
   return stations.find(s => x >= s.x && x <= s.x + s.w && y >= s.y && y <= s.y + s.h);

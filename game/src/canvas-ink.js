@@ -1,3 +1,4 @@
+// Provides shared canvas drawing primitives and the kitchen palette.
 export const palette = {
   ink: '#172b29', night: '#102421', light: '#fff0d7', gold: '#ffd078',
   dull: '#a6bcb0', pale: '#fff0d5', scarlet: '#f28b72', mint: '#bce08a',

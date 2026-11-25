@@ -1,3 +1,4 @@
+// Creates and advances deterministic particles for prep and serving feedback.
 export function burst(state, x, y, color, count = 8) {
   for (let i = 0; i < count; i++) {
     const angle = state.visualRandom() * Math.PI * 2;

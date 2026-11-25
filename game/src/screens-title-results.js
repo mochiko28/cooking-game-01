@@ -1,21 +1,22 @@
+// Builds the title, recipe book, pause menu, and end-of-shift receipt.
 import { recipes } from './recipes.js';
 import { ingredients } from './ingredients.js';
-import { drawDish, drawIngredient } from './draw-food.js';
-import { shiftStars } from './order-board.js';
+import { drawDish } from './draw-dish.js';
+import { drawIngredient } from './draw-food.js';
+import { comboMultiplier, shiftStars } from './combo-streak.js';
 
 const prepLabel = { pour: 'Pour', cook: 'Cook', chop: 'Chop', both: 'Chop + cook' };
 
 function recipeBook() {
   return `<div class="sheet book-sheet">
     <header class="sheet-header">
-      <div><p class="kicker">LANTERN &amp; LADLE</p><h1>Tonight’s menu</h1></div>
+      <div><h1>Recipe Book</h1><p class="menu-instructions">7 ingredients → 6 dishes</p></div>
       <button class="quiet" data-command="close">Close <kbd>R</kbd></button>
     </header>
-    <p class="menu-instructions">Follow each recipe from left to right. Prep every layer before you plate it.</p>
     <div class="recipe-list">
     ${recipes.map(recipe => `<article class="recipe-row" style="--recipe-color:${recipe.color}">
       <div class="recipe-title">
-        <canvas width="120" height="80" data-dish="${recipe.id}" aria-hidden="true"></canvas>
+        <canvas width="147" height="108" data-dish="${recipe.id}" aria-hidden="true"></canvas>
         <h2>${recipe.name}</h2>
       </div>
       <ol class="steps">${recipe.layers.map(id => `<li>
@@ -51,17 +52,18 @@ function resultsScreen(state) {
   const stars = shiftStars(state);
   const ranks = ['Quiet closing', 'First plate out', 'Finding your feet', 'Dinner delivered', 'Market favorite', 'Night market legend'];
   return `<div class="sheet results-sheet">
-    <p class="kicker">LANTERN &amp; LADLE · END OF SHIFT</p>
-    <h1>${ranks[stars]}</h1>
+    <h1>Shift Results</h1>
+    <p class="result-rank">${ranks[stars]}</p>
     <div class="stars" role="img" aria-label="${stars} out of 5 stars">
       ${Array.from({ length: 5 }, (_, index) => `<span aria-hidden="true" class="${index < stars ? 'earned' : ''}">★</span>`).join('')}
     </div>
     <div class="receipt">
       <div><strong>${state.served}</strong><span>Dishes served</span></div>
-      <div><strong>${state.coins}</strong><span>Coins earned</span></div>
-      <div><strong>${state.tips}</strong><span>Tips included</span></div>
+      <div><strong>${state.tips}</strong><span>Tips</span></div>
+      <div><strong>${state.bestCombo}</strong><span>Best combo</span></div>
+      <div><strong>×${comboMultiplier(state.bestCombo)}</strong><span>Best multiplier</span></div>
     </div>
-    <p class="receipt-details"><b>Best streak</b> ×${state.bestCombo} <span>◆</span> <b>Expired tickets</b> ${state.missed}</p>
+    <p class="receipt-details"><b>Coins earned</b> ${state.coins} <span>◆</span> <b>Expired tickets</b> ${state.missed}</p>
     <button class="primary" data-command="start">Open again <kbd>↵</kbd></button>
   </div>`;
 }
