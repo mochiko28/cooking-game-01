@@ -39,9 +39,9 @@ export function drawServiceHud(ctx, state) {
   oval(ctx, 1058, 37, 11, 11, '#eeb667', '#ffdb8a');
   label(ctx, '$', 1058, 38, 14, '#5e3928', { align: 'center' });
   label(ctx, String(state.coins), 1075, 37, 25, palette.light);
-  label(ctx, `${state.served} served`, 1246, 37, 16, '#cbdbc3', { align: 'right' });
+  label(ctx, `${state.served} served`, 1246, 37, rushCover ? 22 : 16, '#cbdbc3', { align: 'right' });
   label(ctx, `×${comboMultiplier(state.combo)} TIPS`, 1050, 66, 20, palette.gold);
-  label(ctx, `${state.combo} streak`, 1246, 66, 16, palette.light, { align: 'right' });
+  label(ctx, `${state.combo} streak`, 1246, 66, rushCover ? 22 : 16, palette.light, { align: 'right' });
 
   drawOrderBoard(ctx, state);
 }
@@ -101,15 +101,14 @@ function drawStallLantern(ctx, x, y) {
 
 function drawOrderBoard(ctx, state) {
   panel(ctx, 20, 92, 1240, 112, 12, '#203930', '#725d47', 2);
-  label(ctx, 'ORDER BOARD', 37, 106, 21, palette.light);
   const focus = focusedTicket(state);
   const cover = state.shot === 'cover';
-  if (cover) drawCoverDecision(ctx);
-  else if (focus && state.showRoute) {
+  label(ctx, 'ORDER BOARD', 37, 106, cover ? 24 : 21, palette.light);
+  if (!cover && focus && state.showRoute) {
     oval(ctx, 218, 106, 4, 4, palette.gold);
     label(ctx, `NEXT ROUTE  /  ${focus.recipe.name.toUpperCase()}`, 230, 106, 15, palette.gold);
   }
-  label(ctx, `${state.orders.length} / ${ticketCapacity} TICKETS`, cover ? 1092 : 1242, 106, 16, '#ced8bd', { align: 'right' });
+  label(ctx, `${state.orders.length} / ${ticketCapacity} TICKETS`, cover ? 1092 : 1242, 106, cover ? 19 : 16, '#ced8bd', { align: 'right' });
   for (let i = 0; i < ticketCapacity; i++) {
     const x = ticketRailX + ticketSpacing * i;
     const ticket = state.orders[i];
@@ -117,14 +116,6 @@ function drawOrderBoard(ctx, state) {
     else if (ticket) drawTicket(ctx, ticket, x, ticket === focus, cover ? state.coverMotion : null);
     else panel(ctx, x, ticketY, ticketWidth, ticketHeight, 7, '#19322a', '#416253');
   }
-}
-
-function drawCoverDecision(ctx) {
-  panel(ctx, 225, 93, 233, 24, 6, '#dcebb9');
-  label(ctx, 'Jade Noodles 6 s', 342, 105, 23, '#20392a', { align: 'center' });
-  label(ctx, '‹ NEXT? ›', 522, 105, 22, palette.light, { align: 'center' });
-  panel(ctx, 583, 93, 305, 24, 6, '#ffcf8a');
-  label(ctx, 'Golden Egg · VIP tip', 735, 105, 23, '#482b20', { align: 'center' });
 }
 
 function drawIncoming(ctx, ticket, x, motion) {
@@ -149,6 +140,7 @@ export function ticketAt(state, x, y) {
 
 function drawTicket(ctx, ticket, x, focused, motion = null) {
   const y = ticketY;
+  const cover = motion !== null;
   const vip = ticket.vipLeft !== null;
   const activeBonus = vip && ticket.vipLeft > 0;
   const progress = Math.max(0, ticket.left - (motion === null ? 0 : motion * 4)) / ticket.patience;
@@ -160,11 +152,11 @@ function drawTicket(ctx, ticket, x, focused, motion = null) {
   panel(ctx, x + 7, y + 7, 63, 55, 6, ticket.recipe.color);
   drawDish(ctx, ticket.recipe.layers, x + 38, y + 34, .51, ticket.recipe.color, ticket.recipe.shape);
   label(ctx, ticket.recipe.name, x + 79, y + 20, motion === null ? 22 : vip ? 24 : 26, palette.ink);
-  const iconSpacing = motion === null ? 38 : 41;
+  const iconSpacing = cover ? 57 : 38;
   ticket.recipe.layers.forEach((id, index) => {
     const iconX = x + 96 + index * iconSpacing;
-    if (index) label(ctx, '›', iconX - 20, y + 47, motion === null ? 17 : 20, '#8d5c40');
-    drawIngredient(ctx, id, iconX, y + 46, motion === null ? .46 : .53, 'ready');
+    if (!cover && index) label(ctx, '›', iconX - 20, y + 47, 17, '#8d5c40');
+    drawIngredient(ctx, id, iconX, y + 46, cover ? .72 : .46, 'ready');
   });
   const barWidth = ticketWidth - 14;
   const fill = motion === null ? patienceColor(progress) : urgent ? (flash ? '#ff4b3d' : '#ff6254')

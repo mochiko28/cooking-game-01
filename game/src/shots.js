@@ -1,7 +1,7 @@
 // Stages the four screenshot scenes and draws the rush showcase.
 import { recipes, spawnOrder, ticketCapacity } from './orders.js';
 import { readShiftClock, serviceWave, serviceWaves, shiftLength } from './shift.js';
-import { estimateRouteSeconds } from './route.js';
+import { chooseFastestRoute, estimateRouteSeconds } from './route.js';
 import { burners, chopIngredient, coverIsland, ingredients, moveParticles, worktops } from './stations.js';
 import { drawBurner, drawRoom, routePoint, routeSegment } from './kitchen-view.js';
 import { label, meter, oval, palette, panel } from './paint.js';
@@ -63,7 +63,8 @@ export function stageScreenshot(state, scene) {
 
 export function coverRoutePlan() {
   // The cook picks up greens, checks the burning pot, then plates the garnish.
-  const stops = [chop, burners[1], plate];
+  const stove = burners[1];
+  const stops = [chop, stove, plate];
   const { x, y, w } = coverIsland;
   const detour = [
     { standX: x - 28, standY: y - 13 },
@@ -71,11 +72,15 @@ export function coverRoutePlan() {
   ];
   // Compare the complete walks at the cover's presentation pace.
   const start = { x: chop.standX, y: chop.standY, speed: 105 };
+  const alternatives = [stops, [chop, stove, ...detour, plate]];
+  const chosen = chooseFastestRoute(start, alternatives);
   return {
     stops,
     detour,
-    fastest: Math.ceil(estimateRouteSeconds(start, stops)),
-    slower: Math.ceil(estimateRouteSeconds(start, [chop, burners[1], ...detour, plate])),
+    choices: alternatives.map(route => ({
+      seconds: Math.ceil(estimateRouteSeconds(start, route)),
+      chosen: route === chosen,
+    })),
   };
 }
 

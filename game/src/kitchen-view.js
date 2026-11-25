@@ -20,7 +20,8 @@ export function drawKitchen(ctx, state, route) {
     panel(ctx, bit.x, bit.y, 5, 5, 1, bit.color);
   }
   ctx.globalAlpha = 1;
-  drawServiceFooter(ctx, state);
+  if (state.shot !== 'cover') drawServiceFooter(ctx, state);
+  else if (route) drawCoverRouteChoices(ctx, route.choices);
 }
 
 function drawStationFocus(ctx, state) {
@@ -592,7 +593,7 @@ function drawRoute(ctx, state, route) {
   });
 }
 
-function drawCoverRoute(ctx, { stops, detour, fastest, slower }) {
+function drawCoverRoute(ctx, { stops, detour }) {
   const points = stops.map(routePoint);
   const [chop, stove, plate] = points;
 
@@ -619,14 +620,20 @@ function drawCoverRoute(ctx, { stops, detour, fastest, slower }) {
     oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
     label(ctx, String(index + 1), x, y + 1, 23, '#25342a', { align: 'center' });
   });
-  panel(ctx, 473, 362, 341, 34, 8, '#213b30', '#a1b699');
-  label(ctx, `ALT ${slower} s — around island`, 643, 379, 25, '#e3edd3', { align: 'center' });
+}
 
-  stroke(ctx, '#ffe1a0', 3, [[766, 477], [744, 477], [706, 510]]);
-  panel(ctx, 765, 457, 143, 40, 8, '#ffe1a0', '#304438');
-  label(ctx, `BEST ${fastest} s`, 836, 477, 28, '#25342a', { align: 'center' });
-  panel(ctx, 914, 460, 73, 34, 8, '#254637', '#bfd78b');
-  label(ctx, `-${slower - fastest} s`, 950, 477, 24, '#dcf2a4', { align: 'center' });
+function drawCoverRouteChoices(ctx, [direct, aroundIsland]) {
+  const cards = [
+    { ...direct, x: 20, width: 692, name: 'ROUTE A: CHOP → STOVE → PLATE' },
+    { ...aroundIsland, x: 724, width: 536, name: 'ROUTE B: AROUND ISLAND' },
+  ];
+  for (const { chosen, x, width, name, seconds } of cards) {
+    const ink = chosen ? '#27392c' : '#d3dbc6';
+    panel(ctx, x, 752, width, 41, 8, chosen ? '#ffe1a0' : '#213b30', chosen ? '#f6b960' : '#6f8975', 2);
+    if (chosen) stroke(ctx, ink, 4, [[x + 17, 773], [x + 24, 780], [x + 37, 765]]);
+    label(ctx, name, x + (chosen ? 49 : 16), 772, 29, ink, { weight: 850 });
+    label(ctx, `${seconds} s`, x + width - 17, 772, 31, ink, { align: 'right', weight: 900 });
+  }
 }
 
 function drawTrail(ctx, from, points) {

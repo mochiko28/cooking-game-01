@@ -22,7 +22,7 @@ export function startGame() {
     if (paintedScreen !== state.screen) {
       renderScreen(screen, state);
       paintedScreen = state.screen;
-      buttons.hidden = state.screen !== 'play' || state.shot === 'rush';
+      buttons.hidden = state.screen !== 'play' || state.shot === 'rush' || state.shot === 'cover';
       routeButton.setAttribute('aria-pressed', String(state.showRoute));
     }
     if (state.shot === 'rush') drawRushView(kitchenContext, state);
@@ -89,7 +89,6 @@ export function startGame() {
   const routeButton = document.querySelector('#route-button');
   const soundButton = document.querySelector('#sound-button');
   const audio = createKitchenAudio();
-  const coverPlan = coverRoutePlan();
   const query = new URLSearchParams(location.search);
   const stillShot = query.has('still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
   const seed = Number(query.get('seed') ?? new Date().getDate());
@@ -98,6 +97,7 @@ export function startGame() {
   let previousScreen = 'title';
   let paintedScreen;
   stageScreenshot(state, query.get('shot'));
+  const coverPlan = state.shot === 'cover' ? coverRoutePlan() : null;
 
   const input = bindKitchenInput(kitchenCanvas, {
     key(code) {
