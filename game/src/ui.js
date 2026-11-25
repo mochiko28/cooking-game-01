@@ -275,33 +275,49 @@ function titleScreen() {
 
 function resultsScreen(state) {
   const stars = shiftStars(state);
-  const ranks = ['Quiet closing', 'First plate out', 'Finding your feet', 'Dinner delivered', 'Market favorite', 'Night market legend'];
+  const showcase = state.shot === 'results';
+  const rating = `<div class="stars" role="img" aria-label="${stars} out of 5 stars">
+    ${Array.from({ length: 5 }, (_, index) => `<span aria-hidden="true" class="${index < stars ? 'earned' : ''}">★</span>`).join('')}
+  </div>`;
   const waveMax = Math.max(1, ...state.servedByWave);
+  const waveChart = `<section class="wave-chart" aria-label="Dishes served per wave">
+    ${showcase ? '' : '<h2>Dishes per wave</h2>'}
+    <ul>
+      ${serviceWaves.map((wave, index) => `<li>
+        <span>${showcase ? wave.name.replace('Dinner ', '') : wave.name}</span>
+        <div class="wave-track" aria-hidden="true"><i style="width:${100 * state.servedByWave[index] / waveMax}%;background:${wave.color}"></i></div>
+        <strong>${state.servedByWave[index]}</strong>
+      </li>`).join('')}
+    </ul>
+  </section>`;
+  const multiplier = comboMultiplier(state.bestCombo);
+  if (showcase) {
+    return `<div class="sheet results-sheet results-showcase">
+      <header><h1>Shift Results</h1>${rating}</header>
+      <div class="receipt">
+        <div><strong>${state.served}</strong><span>Dishes</span></div>
+        <div><strong>${state.tips}</strong><span>Tips</span></div>
+        <div><strong>x${multiplier}</strong><span>Combo</span></div>
+      </div>
+      ${waveChart}
+      <button class="primary" data-command="start">Play again</button>
+    </div>`;
+  }
+  const ranks = ['Quiet closing', 'First plate out', 'Finding your feet', 'Dinner delivered', 'Market favorite', 'Night market legend'];
   return `<div class="sheet results-sheet">
     <h1>Shift Results</h1>
     <div class="result-overview">
       <div class="result-rating">
-        <div class="stars" role="img" aria-label="${stars} out of 5 stars">
-          ${Array.from({ length: 5 }, (_, index) => `<span aria-hidden="true" class="${index < stars ? 'earned' : ''}">★</span>`).join('')}
-        </div>
+        ${rating}
         <p class="result-rank">${ranks[stars]}</p>
       </div>
-      <section class="wave-chart" aria-label="Dishes served per wave">
-        <h2>Dishes per wave</h2>
-        <ul>
-          ${serviceWaves.map((wave, index) => `<li>
-            <span>${wave.name}</span>
-            <div class="wave-track" aria-hidden="true"><i style="width:${100 * state.servedByWave[index] / waveMax}%;background:${wave.color}"></i></div>
-            <strong>${state.servedByWave[index]}</strong>
-          </li>`).join('')}
-        </ul>
-      </section>
+      ${waveChart}
     </div>
     <div class="receipt">
       <div><strong>${state.served}</strong><span>Dishes served</span></div>
       <div><strong>${state.tips}</strong><span>Tips</span></div>
       <div><strong>${state.bestCombo}</strong><span>Best combo</span></div>
-      <div><strong>×${comboMultiplier(state.bestCombo)}</strong><span>Best multiplier</span></div>
+      <div><strong>×${multiplier}</strong><span>Best multiplier</span></div>
     </div>
     <p class="receipt-details"><b>Coins earned</b> ${state.coins} <span>◆</span> <b>Expired tickets</b> ${state.missed}</p>
     <button class="primary" data-command="start">Open again <kbd>↵</kbd></button>
