@@ -1,53 +1,107 @@
-// Plans a station sequence for the next layer of the focused ticket.
+// Compares valid station sequences for the next layer of the focused ticket.
 import { focusedTicket } from './order-board.js';
-import { burners, pantry, sink, worktops } from './kitchen-layout.js';
+import { burners, coverIsland, pantry, sink, worktops } from './kitchen-layout.js';
 import { needsChopping, needsCooking, pickIngredient } from './ingredients.js';
 import { stovePhase } from './cooking-stove.js';
+import { cookSpeed } from './player-cook.js';
 
 export function routeForTicket(state, ticket = focusedTicket(state)) {
+  return chooseFastestRoute(state.cook, ticketRoutes(state, ticket));
+}
+
+export function coverRoutePlan() {
+  // The cook picks up greens, checks the burning pot, then plates the garnish.
+  const stops = [chop, burners[1], plate];
+  const { x, y, w } = coverIsland;
+  const detour = [
+    { standX: x - 28, standY: y - 23 },
+    { standX: x + w + 31, standY: y - 23 },
+  ];
+  // Compare the complete walks at the cover's presentation pace.
+  const start = { x: chop.standX, y: chop.standY, speed: 105 };
+  return {
+    stops,
+    detour,
+    fastest: Math.ceil(estimateRouteSeconds(start, stops)),
+    slower: Math.ceil(estimateRouteSeconds(start, [chop, burners[1], ...detour, plate])),
+  };
+}
+
+export function estimateRouteSeconds(cook, stations) {
+  let { x, y } = cook;
+  let distance = 0;
+  for (const { standX, standY } of stations) {
+    distance += Math.hypot(standX - x, standY - y);
+    x = standX;
+    y = standY;
+  }
+  return distance / (cook.speed ?? cookSpeed);
+}
+
+export function chooseFastestRoute(cook, routes) {
+  let best = [];
+  let shortest = Infinity;
+  for (const route of routes) {
+    const seconds = estimateRouteSeconds(cook, route);
+    if (seconds < shortest) {
+      best = route;
+      shortest = seconds;
+    }
+  }
+  return best;
+}
+
+function ticketRoutes(state, ticket) {
   if (!ticket) return [];
   const { recipe } = ticket;
   const { hand } = state.cook;
-  if (state.ready === recipe || state.queuedPlate === recipe) return [pass];
-  if (state.layers.some((layer, index) => layer !== recipe.layers[index])) return [sink];
+  if (state.ready === recipe || state.queuedPlate === recipe) return [[pass]];
+  if (state.layers.some((layer, index) => layer !== recipe.layers[index])) return [[sink]];
   const id = recipe.layers[state.layers.length];
-  if (!id) return [pass];
-  if (hand && (hand.id !== id || hand.stage === 'burnt')) return [sink];
+  if (!id) return [[pass]];
+  if (hand && (hand.id !== id || hand.stage === 'burnt')) return [[sink]];
 
   const finishing = state.layers.length === recipe.layers.length - 1;
-  if (finishing && state.queuedPlate) return [pass];
+  if (finishing && state.queuedPlate) return [[pass]];
 
-  const route = layerRoute(state, id);
-  if (route.blocked) return route.stations;
-  const visits = [...route.stations, plate];
-  if (finishing) visits.push(pass);
-  return visits;
+  const { options, blocked } = layerRoutes(state, id);
+  if (blocked) return options;
+  return options.flatMap(prep => {
+    const assembly = [...prep, plate];
+    if (!finishing) return [assembly];
+    const route = [...assembly, pass];
+    if (!state.ready) return [route];
+
+    // The dish on the pass can go out between any two prep steps, or both
+    // dishes can go out together after plating. Prep order stays fixed.
+    return [route, ...assembly.map((_, index) => [
+      ...assembly.slice(0, index), pass, ...assembly.slice(index), pass,
+    ])];
+  });
 }
 
-function layerRoute(state, id) {
+function layerRoutes(state, id) {
   const { hand } = state.cook;
-  const preparedBurner = burners.find(({ index }) => state.pots[index].food?.id === id && stovePhase(state.pots[index]) !== 'burnt');
-  if (!hand && preparedBurner) return { stations: [preparedBurner] };
+  const preparedBurners = burners.filter(({ index }) => state.pots[index].food?.id === id && stovePhase(state.pots[index]) !== 'burnt');
+  if (!hand && preparedBurners.length) return { options: preparedBurners.map(burner => [burner]) };
 
   const onBoard = !hand && state.board.food?.id === id;
   const food = hand ?? (onBoard ? state.board.food : pickIngredient(id));
-  const chopping = onBoard || needsChopping(food);
-  if (chopping && state.board.food && !onBoard) return { stations: [hand ? sink : chop], blocked: true };
+  const chopping = needsChopping(food);
+  if (chopping && state.board.food && !onBoard) return { options: [[hand ? sink : chop]], blocked: true };
 
   const stations = [];
   if (!hand && !onBoard) stations.push(pantry.find(station => station.id === id));
-  if (chopping) stations.push(chop);
+  if (onBoard || chopping) stations.push(chop);
   if (needsCooking(food) || (id === 'shrooms' && food.stage === 'raw')) {
     const available = burners.filter(({ index }) => !state.pots[index].food);
-    const from = stations.at(-1)?.standX ?? state.cook.x;
-    const closest = available.toSorted((a, b) => Math.abs(a.standX - from) - Math.abs(b.standX - from))[0];
-    if (!closest) {
+    if (!available.length) {
       const firstToLift = burners.toSorted((a, b) => state.pots[b.index].age - state.pots[a.index].age)[0];
-      return { stations: [hand ? sink : firstToLift], blocked: true };
+      return { options: [[hand ? sink : firstToLift]], blocked: true };
     }
-    stations.push(closest);
+    return { options: available.map(burner => [...stations, burner]) };
   }
-  return { stations };
+  return { options: [stations] };
 }
 
 const [chop, , plate, pass] = worktops;

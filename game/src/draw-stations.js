@@ -3,7 +3,7 @@ import { label, meter, oval, panel, stroke } from './draw-primitives.js';
 import { drawIngredient } from './draw-food.js';
 import { drawCounterSign, drawCrateLabel, drawKitchenSign, drawStationSign } from './draw-labels.js';
 import { ingredients } from './ingredients.js';
-import { pantry, sink, worktops } from './kitchen-layout.js';
+import { coverIsland, pantry, sink, worktops } from './kitchen-layout.js';
 
 export function drawFurniture(ctx, state) {
   drawCounterSign(ctx);
@@ -11,6 +11,25 @@ export function drawFurniture(ctx, state) {
   for (const station of worktops) drawWorktop(ctx, station);
   drawSink(ctx);
   drawChopBoard(ctx, state);
+  if (state.shot === 'cover') drawPrepIsland(ctx);
+}
+
+function drawPrepIsland(ctx) {
+  const { x, y, w, h } = coverIsland;
+  oval(ctx, x + w / 2, y + h - 2, w / 2 + 9, 13, '#112b246e');
+  for (const legX of [x + 12, x + w - 24]) {
+    panel(ctx, legX, y + 34, 12, h - 34, 3, '#7e5236', '#44372a', 2);
+  }
+  panel(ctx, x, y + 8, w, 43, 7, '#875536', '#513a2c', 2);
+  panel(ctx, x, y, w, 41, 7, '#c49361', '#e5b682', 2);
+  drawWoodGrain(ctx, x + 5, y + 2, w - 10, 34);
+  panel(ctx, x + 16, y + 8, 53, 24, 5, '#658a7c', '#34594e', 2);
+  panel(ctx, x + 21, y + 12, 43, 16, 4, '#90ab91', '#bbcab0');
+  for (const offset of [95, 120]) {
+    oval(ctx, x + offset, y + 22, 11, 8, '#86583b');
+    oval(ctx, x + offset, y + 19, 11, 7, '#e6c88e', '#744b37');
+    oval(ctx, x + offset, y + 19, 7, 4, '#ab8054');
+  }
 }
 
 function drawCrate(ctx, crate) {
@@ -78,6 +97,15 @@ export function drawChopBoard(ctx, state) {
   const sinceCut = state.elapsed - state.board.mark;
   const chopping = sinceCut < .17;
   if (state.board.food) drawIngredient(ctx, state.board.food.id, 132, 656, 1.14, state.board.cuts >= 3 ? 'chopped' : 'raw');
+  if (state.shot === 'cover') {
+    for (const [x, y, angle] of [[94, 666, -.4], [108, 672, .35], [119, 677, -.25], [136, 675, .5]]) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      panel(ctx, -6, -3, 12, 6, 2, '#a7c96b', '#466e40');
+      ctx.restore();
+    }
+  }
   ctx.save();
   ctx.translate(170, 653);
   ctx.rotate(chopping ? -.24 : -.63);

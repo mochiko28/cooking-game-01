@@ -10,12 +10,16 @@ import { recipes } from './recipes.js';
 import { createShift, interact, updateShift } from './game-loop.js';
 import { bindKitchenInput } from './input-keyboard-mouse.js';
 import { renderScreen } from './screens-title-results.js';
-import { stageScreenshot } from './screenshot-scenes.js';
+import { moveCoverCook, stageScreenshot } from './screenshot-scenes.js';
 
 function renderServiceFrame(now) {
   const dt = Math.max(0, Math.min(.05, (now - last) / 1000));
   last = now;
   if (state.screen === 'play' && !state.staged) updateShift(state, dt, input.read());
+  if (state.shot === 'cover' && !stillCover) {
+    state.coverMotion = (state.coverMotion + dt) % 3;
+    moveCoverCook(state);
+  }
   if (paintedScreen !== state.screen) {
     renderScreen(screen, state);
     paintedScreen = state.screen;
@@ -83,6 +87,7 @@ const routeButton = document.querySelector('#route-button');
 const soundButton = document.querySelector('#sound-button');
 const audio = createKitchenAudio();
 const query = new URLSearchParams(location.search);
+const stillCover = query.has('still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
 const seed = Number(query.get('seed') ?? new Date().getDate());
 const newShift = () => createShift(seed, audio.play, message => { announcement.textContent = message; });
 let state = newShift();

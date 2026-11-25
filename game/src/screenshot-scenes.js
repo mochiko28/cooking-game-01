@@ -4,7 +4,7 @@ import { chopIngredient } from './chopping.js';
 import { moveParticles } from './particles.js';
 import { recipes } from './recipes.js';
 import { shiftLength } from './shift-timer.js';
-import { worktops } from './kitchen-layout.js';
+import { burners, worktops } from './kitchen-layout.js';
 import { routePoint, routeSegment } from './draw-route.js';
 
 export function stageScreenshot(state, scene) {
@@ -45,7 +45,7 @@ export function stageScreenshot(state, scene) {
   const rush = scene === 'rush';
   const rail = rush ? [ember, tide, harvest, moon, gold, garden] : [garden, tide, gold, moon];
   rail.forEach((recipe, index) => {
-    const left = (rush ? [5, 36, 12, 49, 18, 9] : [42, 49, 21, 57])[index];
+    const left = (rush ? [5, 36, 12, 49, 18, 9] : [42, 49, scene === 'cover' ? 13 : 21, 57])[index];
     spawnOrder(state, { recipe, left, patience: 64, vipLeft: index === 2 ? (rush ? 11 : 17) : undefined });
   });
   if (scene === 'recipes') state.screen = 'recipes';
@@ -62,16 +62,27 @@ export function stageScreenshot(state, scene) {
 }
 
 function stageCover(state) {
-  const chop = worktops.find(station => station.id === 'chop');
-  const plate = worktops.find(station => station.id === 'plate');
-  const from = routePoint(chop);
-  const to = routePoint(plate);
-  const [x, y] = routeSegment(from, to).map((control, axis) => (from[axis] + 2 * control + to[axis]) / 4);
-  Object.assign(state.cook, { x, y: y - 20, facing: 1, hand: { id: 'greens', stage: 'ready' } });
-  state.board.food = { id: 'tofu', stage: 'raw' };
-  state.board.cuts = 1;
+  Object.assign(state.cook, { facing: 1, moving: true, hand: { id: 'greens', stage: 'ready' } });
+  state.board.food = { id: 'greens', stage: 'raw' };
+  state.board.cuts = 3;
+  state.pots[1].age = 11.5;
+  state.coverMotion = .32;
+  moveCoverCook(state);
   state.elapsed -= .13;
   chopIngredient(state);
   moveParticles(state, .13);
   state.elapsed += .13;
 }
+
+export function moveCoverCook(state) {
+  const progress = ((state.coverMotion + 1.18) % 3) / 3;
+  const mix = (from, to) => from + (to - from) * progress;
+  const [x, y] = coverStart.map((value, axis) => mix(mix(value, coverControl[axis]), mix(coverControl[axis], coverEnd[axis])));
+  state.cook.x = x;
+  state.cook.y = y - 20;
+}
+
+const [chop] = worktops;
+const coverStart = routePoint(chop);
+const coverEnd = routePoint(burners[1]);
+const coverControl = routeSegment(coverStart, coverEnd);

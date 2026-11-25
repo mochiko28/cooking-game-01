@@ -8,16 +8,28 @@ import { drawOrderBoard } from './draw-order-board.js';
 export function drawServiceHud(ctx, state) {
   const wave = serviceWave(state.elapsed);
   const waveName = wave.name.toUpperCase();
+  const waveIndex = serviceWaves.indexOf(wave);
   drawStallLantern(ctx, 57, 47);
   label(ctx, 'LANTERN & LADLE', 105, 42, 43, palette.light, { face: 'Georgia, serif' });
   label(ctx, 'NIGHT MARKET KITCHEN', 108, 71, 15, '#b9ceba');
 
-  panel(ctx, 564, 15, 223, 69, 9, '#213e33', '#49675a');
-  label(ctx, waveName, 675, 36, 24, wave.color, { align: 'center' });
-  for (let i = 0; i < serviceWaves.length; i++) {
-    const current = serviceWaves[i].start;
-    const next = serviceWaves[i + 1]?.start ?? shiftLength;
-    meter(ctx, 579 + 67 * i, 59, 60, 9, (state.elapsed - current) / (next - current), wave.color, '#4b6254');
+  const rushCover = state.shot === 'cover';
+  panel(ctx, 564, 15, 223, 69, 9, rushCover ? '#5c3428' : '#213e33', rushCover ? '#d88f52' : '#49675a');
+  label(ctx, rushCover ? `${waveName} ${waveIndex + 1}/${serviceWaves.length}` : waveName, 675, 36, 24, wave.color, { align: 'center' });
+  if (rushCover) {
+    const level = 4 + state.coverMotion / 1.8;
+    for (let i = 0; i < 6; i++) {
+      const height = 8 + i * 3;
+      panel(ctx, 579 + i * 33, 73 - height, 27, height, 3, '#734a36');
+      const fill = height * Math.max(0, Math.min(1, level - i));
+      if (fill > 0) panel(ctx, 579 + i * 33, 73 - fill, 27, fill, 2, i < 3 ? '#ffd181' : '#ff9b63');
+    }
+  } else {
+    for (let i = 0; i < serviceWaves.length; i++) {
+      const current = serviceWaves[i].start;
+      const next = serviceWaves[i + 1]?.start ?? shiftLength;
+      meter(ctx, 579 + 67 * i, 59, 60, 9, (state.elapsed - current) / (next - current), wave.color, '#4b6254');
+    }
   }
 
   drawShiftTimer(ctx, state.elapsed);

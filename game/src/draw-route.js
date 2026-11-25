@@ -1,22 +1,68 @@
 // Draws a dotted route from the cook and numbers the upcoming station visits.
 import { label, oval, panel, palette } from './draw-primitives.js';
-import { floorBounds, worktops } from './kitchen-layout.js';
-import { routeForTicket } from './ticket-route.js';
+import { floorBounds } from './kitchen-layout.js';
+import { coverRoutePlan, routeForTicket } from './ticket-route.js';
 
 export function drawRoute(ctx, state) {
   if (!state.showRoute || state.screen !== 'play') return;
-  const stations = routeForTicket(state);
-  if (!stations.length) return;
+  if (state.shot === 'cover') {
+    drawCoverRoute(ctx);
+    return;
+  }
   const { cook } = state;
-  const showChopVisit = state.shot === 'cover';
-  const points = stations.map(routePoint);
-  if (showChopVisit) points.unshift(routePoint(worktops[0]));
+  const origin = [cook.x, cook.y + 20];
+  const active = routeForTicket(state);
+  if (!active.length) return;
+  const points = active.map(routePoint);
+  drawTrail(ctx, origin, points);
+  points.forEach(([x, y], index) => {
+    const visits = points.flatMap(([px, py], order) => px === x && py === y ? [order + 1] : []);
+    if (visits[0] !== index + 1) return;
+    if (visits.length > 1) panel(ctx, x - 31, y - 17, 62, 34, 14, palette.gold, '#283d31', 3);
+    else oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
+    label(ctx, visits.join('·'), x, y + 1, 23, '#25342a', { align: 'center' });
+  });
+}
+
+function drawCoverRoute(ctx) {
+  const { stops, detour, fastest, slower } = coverPlan;
+  const points = stops.map(routePoint);
+  const [chop, stove, plate] = points;
+
+  // Only the leg around the island differs from the active route.
   ctx.save();
   ctx.beginPath();
-  let from = showChopVisit ? points[0] : [cook.x, cook.y + 20];
+  ctx.moveTo(...stove);
+  const [left, right] = detour.map(routePoint);
+  ctx.arcTo(...left, ...right, 14);
+  ctx.arcTo(...right, ...plate, 14);
+  ctx.lineTo(...plate);
+  ctx.setLineDash([5, 5]);
+  ctx.lineCap = 'round';
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#e3ebc378';
+  ctx.stroke();
+  ctx.restore();
+
+  drawTrail(ctx, chop, [stove, plate]);
+  const labels = ['CHOP', 'STOVE', 'PLATE'];
+  points.forEach(([x, y], index) => {
+    panel(ctx, x - 22, y + 18, 70, 23, 7, '#203b30');
+    label(ctx, labels[index], x + 13, y + 30, 16, '#fff1bf', { align: 'center' });
+    oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
+    label(ctx, String(index + 1), x, y + 1, 23, '#25342a', { align: 'center' });
+  });
+  panel(ctx, 834, 400, 284, 32, 8, '#ffe1a0', '#304438');
+  label(ctx, `FASTEST ROUTE ${fastest} s (alt ${slower} s)`, 976, 416, 19, '#25342a', { align: 'center' });
+}
+
+function drawTrail(ctx, from, points) {
+  ctx.save();
+  ctx.beginPath();
   ctx.moveTo(...from);
-  for (const to of showChopVisit ? points.slice(1) : points) {
-    ctx.quadraticCurveTo(...routeSegment(from, to), ...to);
+  for (const to of points) {
+    const [cx, cy] = routeSegment(from, to);
+    ctx.quadraticCurveTo(cx, cy, ...to);
     from = to;
   }
   ctx.lineCap = 'round';
@@ -28,13 +74,6 @@ export function drawRoute(ctx, state) {
   ctx.lineWidth = 5;
   ctx.stroke();
   ctx.restore();
-  points.forEach(([x, y], index) => {
-    const visits = points.flatMap(([px, py], order) => px === x && py === y ? [order + 1] : []);
-    if (visits[0] !== index + 1) return;
-    if (visits.length > 1) panel(ctx, x - 31, y - 17, 62, 34, 14, palette.gold, '#283d31', 3);
-    else oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
-    label(ctx, visits.join('·'), x, y + 1, 23, '#25342a', { align: 'center' });
-  });
 }
 
 export function routePoint({ standX, standY }) {
@@ -45,3 +84,5 @@ export function routePoint({ standX, standY }) {
 export function routeSegment(from, to) {
   return [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2 - Math.min(65, Math.abs(from[0] - to[0]) * .25)];
 }
+
+const coverPlan = coverRoutePlan();

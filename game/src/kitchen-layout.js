@@ -22,6 +22,7 @@ export const worktops = [
 ];
 
 export const sink = { id: 'sink', label: 'SINK', x: 1180, y: 418, w: 58, h: 93, standX: 1158, standY: 465 };
+export const coverIsland = { x: 553, y: 415, w: 151, h: 65 };
 export const stations = [...pantry, ...burners, ...worktops.filter(station => station.id !== 'stove'), sink];
 
 export function stationAt(x, y) {

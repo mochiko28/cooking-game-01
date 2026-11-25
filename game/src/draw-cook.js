@@ -4,7 +4,7 @@ import { drawIngredient } from './draw-food.js';
 
 export function drawCook(ctx, state) {
   const cook = state.cook;
-  const bob = cook.moving ? Math.sin(state.elapsed * 25) * 3 : 0;
+  const bob = cook.moving ? Math.sin((state.coverMotion ?? state.elapsed) * 25) * 3 : 0;
   ctx.save();
   ctx.translate(cook.x, cook.y - 5 + bob);
   ctx.scale(cook.facing * 1.43, 1.43);

@@ -1,5 +1,5 @@
 // Paints curling steam above simmering pans and hot dishes.
-export function drawSteam(ctx, x, y, elapsed, burnt = false) {
+export function drawSteam(ctx, x, y, elapsed, burnt = false, bold = false) {
   for (let i = 0; i < 4; i++) {
     const phase = (elapsed * .74 + i * .25) % 1;
     const left = x - 26 + 17 * i;
@@ -8,13 +8,13 @@ export function drawSteam(ctx, x, y, elapsed, burnt = false) {
     ctx.beginPath();
     ctx.moveTo(left, top + 12);
     ctx.bezierCurveTo(left - 13, top + 2, left + 14, top - 6, left + 6, top - 17);
-    ctx.strokeStyle = burnt ? '#392d27' : '#fff6d1';
+    ctx.strokeStyle = burnt ? (bold ? '#d0a58b' : '#392d27') : '#fff6d1';
     ctx.lineCap = 'round';
-    ctx.globalAlpha = (1 - phase) * .21;
-    ctx.lineWidth = 7 - phase * 3;
+    ctx.globalAlpha = (1 - phase) * (bold ? .38 : .21);
+    ctx.lineWidth = (bold ? 10 : 7) - phase * 3;
     ctx.stroke();
-    ctx.globalAlpha = (1 - phase) * .77;
-    ctx.lineWidth = 3.4 - phase * 1.6;
+    ctx.globalAlpha = (1 - phase) * (bold ? .95 : .77);
+    ctx.lineWidth = (bold ? 5.8 : 3.4) - phase * 1.6;
     ctx.stroke();
     ctx.restore();
   }

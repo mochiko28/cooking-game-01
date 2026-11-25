@@ -25,58 +25,45 @@ export function renderScreen(element, state) {
     drawDish(canvas.getContext('2d'), recipe.layers, canvas.width / 2, canvas.height * .46, canvas.width / 120, recipe.color, recipe.shape);
   }
   for (const canvas of element.querySelectorAll('[data-food]')) {
-    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 1.17, 'ready');
+    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 1.52, 'ready');
   }
-  const links = element.querySelector('.recipe-links');
-  if (links) drawRecipeLinks(links);
 }
 
 function recipeBook() {
+  const foods = Object.entries(ingredients);
   return `<div class="sheet book-sheet">
     <header class="sheet-header">
-      <div><p class="book-label">Recipe Book</p><h1>${Object.keys(ingredients).length} ingredients → ${recipes.length} dishes</h1></div>
+      <div><p class="book-label">Recipe Book</p><h1>${foods.length} ingredients → ${recipes.length} dishes</h1></div>
       <button class="quiet" data-command="close">Close <kbd>R</kbd></button>
     </header>
-    <div class="recipe-map">
-      <ul class="pantry-list" aria-label="Ingredients and preparation">
-        ${Object.entries(ingredients).map(([id, food]) => `<li style="--ingredient-color:${food.hue}">
-          <canvas width="88" height="72" data-food="${id}" aria-hidden="true"></canvas>
-          <div><b>${food.name}</b><small>${ingredientPrepLabel[food.route]}</small></div>
-        </li>`).join('')}
-      </ul>
-      <canvas class="recipe-links" width="304" height="574" aria-hidden="true"></canvas>
-      <div class="recipe-list">
-        ${recipes.map(recipe => `<article class="recipe-row" style="--recipe-color:${recipe.color}">
-          <canvas width="148" height="92" data-dish="${recipe.id}" aria-hidden="true"></canvas>
-          <div>
-            <h2>${recipe.name}</h2>
-            <ol class="steps" aria-label="Assembly order">${recipe.layers.map(id => `<li>${ingredients[id].name}</li>`).join('')}</ol>
-          </div>
-        </article>`).join('')}
-      </div>
-    </div>
+    <table class="recipe-matrix" aria-label="Ingredients used in each dish">
+      <thead>
+        <tr>
+          <th scope="col" class="dish-column">Dish</th>
+          ${foods.map(([id, food]) => `<th scope="col" title="${ingredientPrepLabel[food.route]}">
+            <canvas width="106" height="65" data-food="${id}" aria-hidden="true"></canvas>
+            <span>${food.name}</span>
+          </th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${recipes.map(recipe => `<tr class="recipe-row">
+          <th scope="row">
+            <div class="recipe-dish">
+              <canvas width="104" height="64" data-dish="${recipe.id}" style="--recipe-color:${recipe.color}" aria-hidden="true"></canvas>
+              <strong>${recipe.name}</strong>
+            </div>
+          </th>
+          ${foods.map(([id, food]) => {
+            const step = recipe.layers.indexOf(id) + 1;
+            return step
+              ? `<td><span class="recipe-dot" style="--ingredient-color:${food.hue}" role="img" aria-label="Assembly step ${step}">${step}</span></td>`
+              : '<td></td>';
+          }).join('')}
+        </tr>`).join('')}
+      </tbody>
+    </table>
   </div>`;
-}
-
-function drawRecipeLinks(canvas) {
-  const ctx = canvas.getContext('2d');
-  const ids = Object.keys(ingredients);
-  ctx.lineCap = 'round';
-  recipes.forEach((recipe, dishIndex) => {
-    recipe.layers.forEach((id, layerIndex) => {
-      const start = (ids.indexOf(id) + .5) * canvas.height / ids.length;
-      const end = (dishIndex + .5) * canvas.height / recipes.length + (layerIndex - (recipe.layers.length - 1) / 2) * 11;
-      ctx.beginPath();
-      ctx.moveTo(0, start);
-      ctx.bezierCurveTo(96, start, 180, end, canvas.width, end);
-      ctx.strokeStyle = '#172e26';
-      ctx.lineWidth = 10;
-      ctx.stroke();
-      ctx.strokeStyle = ingredients[id].hue;
-      ctx.lineWidth = 5;
-      ctx.stroke();
-    });
-  });
 }
 
 function titleScreen() {
