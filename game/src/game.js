@@ -170,14 +170,14 @@ function createShift(seed, sound, announce) {
   const state = {
     elapsed: 0, screen: 'title', orders: [], nextTicket: 1, nextArrival: 14,
     coins: 0, tips: 0, served: 0, servedByWave: serviceWaves.map(() => 0), missed: 0, combo: 0, bestCombo: 0,
-    servedByRoute: { left: 0, right: 0, both: 0 },
+    servedByRoute: { left: 0, right: 0, both: 0 }, simmerSecondsSaved: 0,
     lastServedRecipe: null,
     focusedNumber: null, showRoute: true,
     cook: { x: 198, y: 419, facing: 1, moving: false, hand: null },
     board: { food: null, cuts: 0, mark: -10 },
     pots: Array.from({ length: 2 }, () => ({ food: null, age: 0 })),
     layers: [], ready: null, queuedPlate: null, platePop: -10, servePop: null, particles: [], target: null, hover: null,
-    layerBurners: new Set(), readyBurners: null, queuedBurners: null,
+    layerSimmers: [], readySimmers: null, queuedSimmers: null,
     mouseChop: false, notice: '', noticeUntil: 0, staged: false,
     random: randomSequence(seed), visualRandom: randomSequence(seed + 89), sound, announce,
   };

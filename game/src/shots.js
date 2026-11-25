@@ -2,7 +2,7 @@
 import { recipes, spawnOrder, ticketCapacity } from './orders.js';
 import { serviceWave, shiftLength } from './shift.js';
 import { chooseFastestRoute, estimateRouteSeconds } from './route.js';
-import { burners, chopIngredient, coverIsland, ingredients, moveParticles, useStation, worktops } from './stations.js';
+import { burners, chopIngredient, coverIsland, ingredients, moveParticles, simmerSeconds, useStation, worktops } from './stations.js';
 import { drawRoom, routePoint, routeSegment } from './room.js';
 import { drawBurner, drawServePop } from './worktops.js';
 import { drawLastCall, drawUrgentClock } from './hud.js';
@@ -61,6 +61,8 @@ export function stageScreenshot(state, scene) {
     state.served = 9;
     state.servedByWave = [2, 4, 3];
     state.servedByRoute = { left: 4, right: 3, both: 2 };
+    // The two both-burner dishes started their second pot 1.6 s and 2 s later.
+    state.simmerSecondsSaved = (simmerSeconds - 1.6) + (simmerSeconds - 2);
     state.coins = 698;
     state.tips = 302;
     state.bestCombo = 6;

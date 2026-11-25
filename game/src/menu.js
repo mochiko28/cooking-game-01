@@ -103,7 +103,8 @@ function resultsScreen(state) {
   </section>`;
   const multiplier = comboMultiplier(state.bestCombo);
   const { left, right, both } = state.servedByRoute;
-  const routeSummary = `<p class="route-summary">Stove routes <strong>Left ×${left} · Right ×${right} · Both ×${both}</strong></p>`;
+  const saved = Number(state.simmerSecondsSaved.toFixed(1));
+  const routeSummary = `<p class="route-summary" title="Dishes by burner used (left, right, both). Simmer time saved compared with cooking each dish’s ingredients in sequence.">L×${left} · R×${right} · Both×${both}<strong>→ ${saved}s simmer saved</strong></p>`;
   if (showcase) {
     return `<div class="sheet results-sheet results-showcase">
       <header><h1>Shift Results</h1>${rating}</header>

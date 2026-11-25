@@ -9,19 +9,19 @@ function assembleRecipeLayers(state) {
   if (!choices.length) return 'That layer does not fit. Check the ticket order.';
   const completed = choices.find(recipe => recipe.layers.length === layers.length);
   if (completed && state.queuedPlate) return 'Serve a dish at the window to free the tray.';
-  const { burnerIndex } = state.cook.hand;
-  if (burnerIndex !== undefined) state.layerBurners.add(burnerIndex);
+  const { simmer } = state.cook.hand;
+  if (simmer) state.layerSimmers.push(simmer);
   state.layers = completed ? [] : layers;
   state.cook.hand = null;
   if (completed) {
     if (state.ready) {
       state.queuedPlate = completed;
-      state.queuedBurners = state.layerBurners;
+      state.queuedSimmers = state.layerSimmers;
     } else {
       state.ready = completed;
-      state.readyBurners = state.layerBurners;
+      state.readySimmers = state.layerSimmers;
     }
-    state.layerBurners = new Set();
+    state.layerSimmers = [];
   }
   state.platePop = state.elapsed;
   burst(state, completed && !state.queuedPlate ? 1039 : 679, 660, '#ffce72', completed ? 18 : 8);
@@ -46,13 +46,13 @@ export function useStation(state, station) {
   if (state.cook.hand) state.cook.hand = null;
   else if (state.layers.length) {
     state.layers = [];
-    state.layerBurners.clear();
+    state.layerSimmers = [];
   } else if (state.queuedPlate) {
     state.queuedPlate = null;
-    state.queuedBurners = null;
+    state.queuedSimmers = null;
   } else if (state.ready) {
     state.ready = null;
-    state.readyBurners = null;
+    state.readySimmers = null;
   } else return 'Use the sink to clear your hands or an unfinished dish.';
   state.sound('tick');
   return 'Counter cleared.';
@@ -188,6 +188,7 @@ function useStove(state, index) {
   const { cook } = state;
   if (!pot.food && needsCooking(cook.hand)) {
     pot.food = cook.hand;
+    pot.startedAt = state.elapsed;
     pot.age = 0;
     cook.hand = null;
     state.sound('sizzle');
@@ -195,7 +196,8 @@ function useStove(state, index) {
   }
   const phase = stovePhase(pot);
   if (!cook.hand && (phase === 'cooked' || phase === 'burnt')) {
-    cook.hand = { id: pot.food.id, stage: phase === 'cooked' ? 'ready' : 'burnt', burnerIndex: index };
+    cook.hand = { id: pot.food.id, stage: phase === 'cooked' ? 'ready' : 'burnt',
+      simmer: { index, startedAt: pot.startedAt } };
     pot.food = null;
     state.sound('tick');
     return phase === 'burnt' ? 'Burnt food goes in the sink.' : undefined;
@@ -211,17 +213,25 @@ const burnSeconds = 7;
 function serveReadyPlate(state) {
   if (!state.ready) return 'Finish a dish at the plating counter first.';
   const recipe = state.ready;
-  const usedBurners = state.readyBurners;
+  const simmers = state.readySimmers;
   const tipsBefore = state.tips;
   const service = scoreServe(state, recipe);
   state.ready = state.queuedPlate;
-  state.readyBurners = state.queuedBurners;
+  state.readySimmers = state.queuedSimmers;
   state.queuedPlate = null;
-  state.queuedBurners = null;
+  state.queuedSimmers = null;
   if (!service) return `No ticket for ${recipe.name}. The dish was cleared.`;
-  if (usedBurners?.size) {
+  if (simmers?.length) {
+    const usedBurners = new Set(simmers.map(simmer => simmer.index));
     const route = usedBurners.size === burners.length ? 'both' : usedBurners.has(0) ? 'left' : 'right';
     state.servedByRoute[route]++;
+    if (route === 'both') {
+      // Each overlap replaces time the dish would have spent simmering in sequence.
+      const starts = simmers.map(simmer => simmer.startedAt).sort((a, b) => a - b);
+      for (let i = 1; i < starts.length; i++) {
+        state.simmerSecondsSaved += Math.max(0, simmerSeconds - (starts[i] - starts[i - 1]));
+      }
+    }
   }
   state.servePop = {
     at: state.elapsed,
