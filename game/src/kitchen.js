@@ -218,43 +218,56 @@ function drawChopBoard(ctx, state) {
   for (const y of [634, 672, 685]) stroke(ctx, '#d4995c', 1.5, [[70, y], [254, y]]);
   oval(ctx, 253, 657, 5, 9, '#6d462d');
   const sinceCut = state.elapsed - state.board.mark;
-  const chopping = sinceCut < .17;
+  const cover = state.shot === 'cover';
+  const swing = cover ? (state.coverMotion - .19 + 3) % .6 : sinceCut;
+  const chopping = swing < .17;
   if (state.board.food) drawIngredient(ctx, state.board.food.id, 132, 656, 1.14, state.board.cuts >= 3 ? 'chopped' : 'raw');
-  if (state.shot === 'cover') {
-    for (const [x, y, angle] of [[94, 666, -.4], [108, 672, .35], [119, 677, -.25], [136, 675, .5]]) {
+  if (cover && swing < .34) {
+    const lift = 1 - (swing - .17) ** 2 * 19;
+    for (const [x, y, angle] of [[87, 637, -.4], [108, 647, .35], [124, 624, -.25], [143, 633, .5], [157, 647, -.5]]) {
       ctx.save();
-      ctx.translate(x, y);
+      ctx.translate(146 + (x - 146) * lift, 661 + (y - 661) * lift);
       ctx.rotate(angle);
-      panel(ctx, -6, -3, 12, 6, 2, '#a7c96b', '#466e40');
+      panel(ctx, -7, -4, 14, 8, 2, '#c8e88b', '#426a3b');
       ctx.restore();
     }
   }
   ctx.save();
-  ctx.translate(170, 653);
-  ctx.rotate(chopping ? -.24 : -.63);
-  panel(ctx, -14, 2, 53, 20, 4, '#b8ceca', '#53665e');
-  stroke(ctx, '#effcea', 2, [[-10, 18], [34, 18]]);
-  panel(ctx, 36, 2, 28, 10, 4, '#49372a');
-  oval(ctx, 49, 7, 2, 2, '#dbab68');
+  if (cover && chopping) {
+    for (const [radius, start, end, color] of [[77, 3.08, 3.69, '#fff0c4'], [88, 3.29, 3.61, '#ffd58e']]) {
+      ctx.beginPath();
+      ctx.arc(237, 660, radius, start, end);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+  }
+  ctx.translate(220, 655);
+  ctx.rotate(cover && chopping ? .81 - swing * 2 : chopping ? -.24 : -.63);
+  panel(ctx, -57, -3, 56, 25, 4, '#b8ceca', '#53665e');
+  stroke(ctx, '#effcea', 3, [[-52, 18], [-5, 18]]);
+  panel(ctx, -4, -3, 30, 12, 4, '#49372a');
+  oval(ctx, 11, 3, 2.4, 2.4, '#dbab68');
   ctx.restore();
-  if (chopping) {
+  if (!cover && chopping) {
     stroke(ctx, '#fff2c6', 3, [[148, 644], [137, 633]]);
     stroke(ctx, '#fff2c6', 3, [[156, 639], [154, 626]]);
     stroke(ctx, '#ffe299', 2.4, [[165, 639], [172, 630]]);
   }
-  if (sinceCut < .58) drawChopPop(ctx, sinceCut);
+  if (cover || sinceCut < .58) drawChopPop(ctx, swing, state.board.cuts, cover);
   meter(ctx, 62, 703, 204, 6, state.board.cuts / 4, '#335a45', '#9e6c48');
   const status = state.board.cuts === 4 ? 'PICK UP' : state.board.food ? `${state.board.cuts} / 4 CUTS` : 'HOLD TO CHOP';
   label(ctx, status, 164, 721, 16, '#3b2b20', { align: 'center' });
 }
 
-function drawChopPop(ctx, age) {
+function drawChopPop(ctx, age, cuts, cover) {
   ctx.save();
-  ctx.globalAlpha = Math.min(1, (.58 - age) * 6);
-  ctx.translate(99, 572 - age * 31);
-  ctx.rotate(-.09);
-  panel(ctx, -52, -15, 104, 30, 15, '#22342b', '#ffdc8a', 2);
-  label(ctx, '+1 CUT', 0, 0, 20, '#ffedb7', { align: 'center', weight: 900 });
+  ctx.globalAlpha = cover ? 1 : Math.min(1, (.58 - age) * 6);
+  ctx.translate(cover ? 118 : 110, (cover ? 506 : 572) - age * 19);
+  ctx.rotate(-.08);
+  panel(ctx, -90, -22, 180, 44, 12, '#233a2a', '#d4e78f', 3);
+  label(ctx, `CHOP! ${cuts}/4`, 0, 0, 31, '#e8f6b8', { align: 'center', weight: 900 });
   ctx.restore();
 }
 
@@ -378,9 +391,24 @@ function drawPlating(ctx, state) {
     label(ctx, ingredients[id].name, 797, 653 + i * 19, 16, '#302d23');
     if (next) label(ctx, 'NEXT', 918, 653 + i * 19, 10, '#78502e', { align: 'right' });
   });
+  if (state.shot === 'cover') drawFallingGreens(ctx, state.coverMotion);
+}
+
+function drawFallingGreens(ctx, motion) {
+  const progress = ((motion + .03) % .7) / .7;
+  const x = 743 - progress * 35;
+  const y = 626 + progress * 20;
+  stroke(ctx, '#fff2b7', 4, [[x + 16, y - 6], [x + 27, y - 16]]);
+  stroke(ctx, '#d8eaaa', 3, [[x + 27, y + 2], [x + 35, y - 8]]);
+  drawIngredient(ctx, 'greens', x, y, .94, 'chopped');
+  drawSparkle(ctx, x - 31, y + 10, 11, 1);
+  panel(ctx, 805, 533 - progress * 14, 167, 43, 12, '#233a2a', '#d4e78f', 3);
+  label(ctx, '+GREENS', 888, 554 - progress * 14, 31, '#e8f6b8', { align: 'center', weight: 900 });
 }
 
 function drawPass(ctx, state) {
+  const cover = state.shot === 'cover';
+  if (cover) drawWaitingCustomer(ctx, state.coverMotion);
   panel(ctx, 954, 620, 274, 104, 7, '#6e3f31', '#a9754f');
   for (let y = 627; y < 721; y += 15) stroke(ctx, '#cc88534d', 1.5, [[962, y], [1220, y]]);
   oval(ctx, 1039, 667, 78, 44, null, '#b37e56');
@@ -391,10 +419,63 @@ function drawPass(ctx, state) {
 
   drawReadyHalo(ctx, 1044, 665);
   drawDish(ctx, state.ready.layers, 1044, 658, 1.75, state.ready.color, state.ready.shape);
-  drawSteam(ctx, 1044, 649, state.elapsed);
-  drawReadySparkles(ctx, 1044, 665, state.elapsed);
+  const steamTime = state.elapsed + (cover ? state.coverMotion : 0);
+  if (cover) drawReadySteam(ctx, state.coverMotion);
+  else drawSteam(ctx, 1044, 649, steamTime);
+  drawReadySparkles(ctx, 1044, 665, steamTime);
+  if (cover) drawReadyRing(ctx, state.coverMotion);
   drawKitchenSign(ctx, 'Ready', 1138, 642, 82, 36, { size: 22 });
   label(ctx, state.ready.name, 1179, 698, 16, '#ffe5b7', { align: 'center' });
+}
+
+function drawReadySteam(ctx, motion) {
+  ctx.save();
+  for (const [x, y, height] of [[1033, 645, 24], [1060, 640, 23], [1085, 643, 24]]) {
+    const drift = Math.sin(motion * 5 + x) * 4;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x - 15, y - 9, x + 13, y - 12, x + drift, y - height);
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#7c634958';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    ctx.strokeStyle = '#fff3ce';
+    ctx.lineWidth = 4.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawWaitingCustomer(ctx, motion) {
+  oval(ctx, 1085, 573, 57, 16, '#132c28a0');
+  panel(ctx, 1044, 510, 80, 75, 27, '#202e3c', '#e2a36a', 3);
+  stroke(ctx, '#b97650', 3, [[1107, 525], [1091, 554], [1071, 563]]);
+  oval(ctx, 1084, 493, 28, 29, '#232734', '#e2a36a', 3);
+  oval(ctx, 1062, 498, 8, 9, '#bd7854');
+  stroke(ctx, '#202e3c', 19, [[1057, 531], [1029, 558], [1019, 577]]);
+  panel(ctx, 1007, 562, 21, 26, 8, '#d39a6f', '#f6c48f', 2);
+  stroke(ctx, '#a65f42', 2, [[1014, 570], [1014, 580]]);
+  const y = 503 - Math.sin(motion * 3) * 8;
+  oval(ctx, 1150, y, 24, 24, '#983d31', '#ffd28d', 3);
+  label(ctx, '♥', 1150, y + 1, 29, '#fff0ce', { align: 'center' });
+  drawSparkle(ctx, 1179, y - 12, 6, .9);
+}
+
+function drawReadyRing(ctx, motion) {
+  const pulse = Math.sin(motion * 8) * 2;
+  for (const side of [-1, 1]) {
+    for (const radius of [25, 38]) {
+      const facing = side === 1 ? 0 : Math.PI;
+      ctx.beginPath();
+      ctx.ellipse(1179, 628, radius + pulse, 16, 0, facing - .49, facing + .49);
+      ctx.strokeStyle = '#ffd58d';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+    }
+  }
+  oval(ctx, 1179, 631, 12, 4, '#b87842', '#ffdf9a', 2);
+  panel(ctx, 1170, 618, 18, 13, [9, 9, 3, 3], '#ffda87');
+  oval(ctx, 1179, 617, 3, 3, '#fff0bd');
 }
 
 function drawReadyHalo(ctx, x, y) {
@@ -412,19 +493,23 @@ function drawReadyHalo(ctx, x, y) {
 
 function drawReadySparkles(ctx, x, y, elapsed) {
   for (const [dx, dy, size, phase] of [[-77, -34, 10, 1], [-71, 38, 7, 3], [75, -40, 9, 5], [83, 29, 8, 6]]) {
-    ctx.save();
-    ctx.translate(x + dx, y + dy);
-    ctx.globalAlpha = .8 + .2 * Math.sin(elapsed * 4 + phase);
-    ctx.fillStyle = '#fff1b4';
-    ctx.beginPath();
-    ctx.moveTo(0, -size);
-    ctx.quadraticCurveTo(1, -1, size, 0);
-    ctx.quadraticCurveTo(1, 1, 0, size);
-    ctx.quadraticCurveTo(-1, 1, -size, 0);
-    ctx.quadraticCurveTo(-1, -1, 0, -size);
-    ctx.fill();
-    ctx.restore();
+    drawSparkle(ctx, x + dx, y + dy, size, .8 + .2 * Math.sin(elapsed * 4 + phase));
   }
+}
+
+function drawSparkle(ctx, x, y, size, opacity) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.globalAlpha = opacity;
+  ctx.fillStyle = '#fff1b4';
+  ctx.beginPath();
+  ctx.moveTo(0, -size);
+  ctx.quadraticCurveTo(1, -1, size, 0);
+  ctx.quadraticCurveTo(1, 1, 0, size);
+  ctx.quadraticCurveTo(-1, 1, -size, 0);
+  ctx.quadraticCurveTo(-1, -1, 0, -size);
+  ctx.fill();
+  ctx.restore();
 }
 
 function drawCook(ctx, state) {

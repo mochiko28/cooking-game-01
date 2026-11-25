@@ -109,7 +109,7 @@ function drawIncoming(ctx, ticket, x, motion) {
   ctx.beginPath();
   ctx.rect(x, ticketY - 2, ticketWidth + 2, ticketHeight + 4);
   ctx.clip();
-  drawTicket(ctx, ticket, x + offset, false);
+  drawTicket(ctx, ticket, x + offset, false, motion);
   ctx.restore();
   const chipX = 1120 + Math.min(10, Math.round(offset * .23));
   panel(ctx, chipX, 95, 112, 20, 6, '#bc5038', '#ffd083', 1.5);
@@ -125,7 +125,7 @@ function drawTicket(ctx, ticket, x, focused, motion = null) {
   const y = ticketY;
   const vip = ticket.vipLeft !== null;
   const activeBonus = vip && ticket.vipLeft > 0;
-  const progress = ticket.left / ticket.patience;
+  const progress = Math.max(0, ticket.left - (motion === null ? 0 : motion * 4)) / ticket.patience;
   const urgent = motion !== null && activeBonus && progress <= .34;
   const flash = urgent && Math.cos(motion * Math.PI * 4) < 0;
   const color = activeBonus ? '#ffe0bc' : '#fff0d3';
@@ -133,12 +133,20 @@ function drawTicket(ctx, ticket, x, focused, motion = null) {
   panel(ctx, x, y, ticketWidth, ticketHeight, 6, color, outline, urgent || focused ? 4 : 1.5);
   panel(ctx, x + 7, y + 7, 63, 55, 6, ticket.recipe.color);
   drawDish(ctx, ticket.recipe.layers, x + 38, y + 34, .51, ticket.recipe.color, ticket.recipe.shape);
-  label(ctx, ticket.recipe.name, x + 79, y + 20, 22, palette.ink);
+  label(ctx, ticket.recipe.name, x + 79, y + 20, motion === null ? 22 : vip ? 24 : 26, palette.ink);
   ticket.recipe.layers.forEach((id, index) => {
-    if (index) label(ctx, '›', x + 76 + index * 38, y + 50, 17, '#8d5c40');
-    drawIngredient(ctx, id, x + 96 + index * 38, y + 49, .46, 'ready');
+    if (index) label(ctx, '›', x + 76 + index * 38, y + 47, 17, '#8d5c40');
+    drawIngredient(ctx, id, x + 96 + index * 38, y + 46, .46, 'ready');
   });
-  meter(ctx, x + 7, y + 65, ticketWidth - 14, urgent ? 10 : 8, progress, flash ? '#ff4738' : patienceColor(progress), urgent ? '#a95e4e' : '#d2b797');
+  const barWidth = ticketWidth - 14;
+  const fill = motion === null ? patienceColor(progress) : urgent ? (flash ? '#ff4b3d' : '#ff6254')
+    : progress < .7 ? '#f3ac49' : '#90d496';
+  const track = motion === null ? '#d2b797' : urgent ? '#843528' : '#465649';
+  meter(ctx, x + 7, y + 62, barWidth, 12, progress, fill, track);
+  if (motion !== null && progress > 0) {
+    const tip = x + 3 + barWidth * progress;
+    stroke(ctx, urgent ? '#ffcbab' : '#fff0bf', 3, [[tip, y + 65], [tip, y + 71]]);
+  }
   if (urgent) {
     const markerX = x + 207 + Math.sin(motion * 34) * 3;
     oval(ctx, markerX, y + 48, 13, 13, '#b32e27');
@@ -186,44 +194,33 @@ export function renderScreen(element, state) {
     drawDish(canvas.getContext('2d'), recipe.layers, canvas.width / 2, canvas.height * .46, canvas.width / 120, recipe.color, recipe.shape);
   }
   for (const canvas of element.querySelectorAll('[data-food]')) {
-    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 1.52, 'ready');
+    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 2.15, 'ready');
   }
 }
 
 function recipeBook() {
-  const foods = Object.entries(ingredients);
   return `<div class="sheet book-sheet">
     <header class="sheet-header">
-      <div><p class="book-label">Recipe Book</p><h1>${foods.length} ingredients → ${recipes.length} dishes</h1></div>
+      <h1>Recipe Book</h1>
       <button class="quiet" data-command="close">Close <kbd>R</kbd></button>
     </header>
-    <table class="recipe-matrix" aria-label="Ingredients used in each dish">
-      <thead>
-        <tr>
-          <th scope="col" class="dish-column">Dish</th>
-          ${foods.map(([id, food]) => `<th scope="col" title="${ingredientPrepLabel[food.route]}">
-            <canvas width="106" height="65" data-food="${id}" aria-hidden="true"></canvas>
-            <span>${food.name}</span>
-          </th>`).join('')}
-        </tr>
-      </thead>
-      <tbody>
-        ${recipes.map(recipe => `<tr class="recipe-row">
-          <th scope="row">
-            <div class="recipe-dish">
-              <canvas width="104" height="64" data-dish="${recipe.id}" style="--recipe-color:${recipe.color}" aria-hidden="true"></canvas>
-              <strong>${recipe.name}</strong>
-            </div>
-          </th>
-          ${foods.map(([id, food]) => {
-            const step = recipe.layers.indexOf(id) + 1;
-            return step
-              ? `<td><span class="recipe-dot" style="--ingredient-color:${food.hue}" role="img" aria-label="Assembly step ${step}">${step}</span></td>`
-              : '<td></td>';
-          }).join('')}
-        </tr>`).join('')}
-      </tbody>
-    </table>
+    <ul class="recipe-grid">
+      ${recipes.map(recipe => `<li class="recipe-card" style="--recipe-color:${recipe.color}">
+        <h2>${recipe.name}</h2>
+        <div class="recipe-build">
+          <canvas width="166" height="99" data-dish="${recipe.id}" aria-hidden="true"></canvas>
+          <ol class="recipe-layers" aria-label="Assembly order">
+            ${recipe.layers.map(id => {
+              const food = ingredients[id];
+              return `<li title="${food.name} · ${ingredientPrepLabel[food.route]}">
+                <span class="visually-hidden">${food.name}, ${ingredientPrepLabel[food.route]}</span>
+                <canvas width="82" height="81" data-food="${id}" aria-hidden="true"></canvas>
+              </li>`;
+            }).join('')}
+          </ol>
+        </div>
+      </li>`).join('')}
+    </ul>
   </div>`;
 }
 

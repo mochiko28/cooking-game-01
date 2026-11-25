@@ -44,7 +44,7 @@ export function stageScreenshot(state, scene) {
   const rush = scene === 'rush';
   const rail = rush ? [ember, tide, harvest, moon, gold, garden] : [garden, tide, gold, moon];
   rail.forEach((recipe, index) => {
-    const left = (rush ? [5, 36, 12, 49, 18, 9] : [42, 49, scene === 'cover' ? 13 : 21, 57])[index];
+    const left = (rush ? [5, 36, 12, 49, 18, 9] : [42, 49, 21, 57])[index];
     spawnOrder(state, { recipe, left, patience: 64, vipLeft: index === 2 ? (rush ? 11 : 17) : undefined });
   });
   if (scene === 'recipes') state.screen = 'recipes';
@@ -81,7 +81,7 @@ export function coverRoutePlan() {
 function stageCover(state) {
   Object.assign(state.cook, { facing: 1, moving: true, hand: { id: 'greens', stage: 'ready' } });
   state.board.food = { id: 'greens', stage: 'raw' };
-  state.board.cuts = 3;
+  state.board.cuts = 2;
   state.pots[1].age = 11.5;
   state.coverMotion = .32;
   moveCoverCook(state);
@@ -108,7 +108,7 @@ export function drawRushView(ctx, state) {
   drawRoom(ctx);
   drawRushHeader(ctx, state.elapsed);
   drawRushRail(ctx, state.orders);
-  panel(ctx, 26, 339, 1228, 434, 14, '#b68051', '#f8c385', 3);
+  panel(ctx, 26, 384, 1228, 389, 14, '#b68051', '#f8c385', 3);
   drawRushBurner(ctx, state, 0, 44, 735);
   drawRushBurner(ctx, state, 1, 797, 438);
 }
@@ -132,18 +132,19 @@ function drawRushHeader(ctx, elapsed) {
 }
 
 function drawRushRail(ctx, orders) {
-  panel(ctx, 26, 148, 1228, 179, 11, '#1e342a', '#9a7455', 2);
-  label(ctx, 'ORDER BOARD', 39, 169, 23, palette.light);
-  label(ctx, `${orders.length} WAITING`, 1240, 169, 23, '#ffd098', { align: 'right' });
+  panel(ctx, 26, 148, 1228, 224, 11, '#1e342a', '#9a7455', 2);
+  label(ctx, 'ORDER BOARD', 39, 169, 29, palette.light);
+  label(ctx, `${orders.length} WAITING`, 1240, 169, 29, '#ffd098', { align: 'right' });
   orders.forEach((ticket, i) => {
-    const x = 37 + i * 202;
+    const x = 38 + (i % 3) * 404;
+    const y = 190 + Math.floor(i / 3) * 89;
     const progress = ticket.left / ticket.patience;
     const urgent = progress <= .34;
-    panel(ctx, x, 186, 195, 130, 8, '#ffebcb', urgent ? '#ff7959' : '#af9469', urgent ? 4 : 2);
-    panel(ctx, x + 6, 192, 183, 68, 5, ticket.recipe.color);
-    drawDish(ctx, ticket.recipe.layers, x + 97, 220, .97, ticket.recipe.color, ticket.recipe.shape);
-    label(ctx, ticket.recipe.name, x + 97, 275, 25, palette.ink, { align: 'center' });
-    meter(ctx, x + 9, 292, 177, 16, progress, urgent ? '#ff5d43' : '#66aa6a', urgent ? '#81312a' : '#b7bf8b');
+    panel(ctx, x, y, 396, 79, 8, '#ffebcb', urgent ? '#ff7959' : '#af9469', urgent ? 4 : 2);
+    panel(ctx, x + 6, y + 6, 102, 67, 5, ticket.recipe.color);
+    drawDish(ctx, ticket.recipe.layers, x + 57, y + 36, .79, ticket.recipe.color, ticket.recipe.shape);
+    label(ctx, ticket.recipe.name, x + 120, y + 27, 39, palette.ink);
+    meter(ctx, x + 120, y + 51, 262, 19, progress, urgent ? '#ff634b' : '#6ebf81', urgent ? '#79372e' : '#365547');
   });
 }
 
@@ -151,13 +152,13 @@ function drawRushBurner(ctx, state, index, x, width) {
   const cx = x + width / 2;
   const burning = index === 0;
   const pot = state.pots[index];
-  panel(ctx, x, 355, width, 401, 11, burning ? '#4e2a25' : '#29473b', burning ? '#e46c50' : '#7b9473', 4);
-  panel(ctx, x + 9, 363, width - 18, 63, 8, burning ? '#a73428' : '#3e6650');
-  label(ctx, burning ? 'POT BURNING' : 'SIMMERING', cx, 395, 49, '#fff0d5', { align: 'center' });
+  panel(ctx, x, 399, width, 357, 11, burning ? '#4e2a25' : '#29473b', burning ? '#e46c50' : '#7b9473', 4);
+  panel(ctx, x + 9, 407, width - 18, 58, 8, burning ? '#a73428' : '#3e6650');
+  label(ctx, burning ? 'POT BURNING' : 'SIMMERING', cx, 436, 49, '#fff0d5', { align: 'center' });
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(x + 10, 430, width - 20, 265);
+  ctx.rect(x + 10, 465, width - 20, 230);
   ctx.clip();
   if (burning) {
     const glow = ctx.createRadialGradient(cx, 588, 40, cx, 588, 230);
@@ -165,9 +166,9 @@ function drawRushBurner(ctx, state, index, x, width) {
     glow.addColorStop(1, '#4e2a2500');
     oval(ctx, cx, 580, 230, 145, glow);
   }
-  drawBurner(ctx, pot, index, cx, burning ? 574 : 575, burning ? 3.55 : 2.98, state.elapsed);
+  drawBurner(ctx, pot, index, cx, 593, burning ? 3.35 : 2.85, state.elapsed);
   ctx.restore();
-  if (burning) drawFireAndSmoke(ctx, cx, 645);
+  if (burning) drawFireAndSmoke(ctx, cx, 659);
   panel(ctx, x + 10, 695, width - 20, 53, 7, burning ? '#702f25' : '#29473b');
   label(ctx, burning ? 'SHRIMP BURNT' : 'NOODLES', cx, 717, 34, burning ? '#ffcf9b' : '#ffe0a5', { align: 'center' });
   if (!burning) meter(ctx, x + 19, 739, width - 38, 8, pot.age / simmerSeconds, '#f0b663', '#597662');
