@@ -7,7 +7,8 @@ import {
 import { drawDish, drawIngredient, label, meter, oval, palette, panel, stroke } from './paint.js';
 
 export function drawKitchen(ctx, state, route) {
-  drawRoom(ctx);
+  const cover = state.shot === 'cover';
+  drawRoom(ctx, cover);
   drawFurniture(ctx, state);
   drawStove(ctx, state);
   drawPlating(ctx, state);
@@ -20,7 +21,7 @@ export function drawKitchen(ctx, state, route) {
     panel(ctx, bit.x, bit.y, 5, 5, 1, bit.color);
   }
   ctx.globalAlpha = 1;
-  if (state.shot !== 'cover') drawServiceFooter(ctx, state);
+  if (!cover) drawServiceFooter(ctx, state);
   else if (route) drawCoverRouteChoices(ctx, route.choices);
 }
 
@@ -32,17 +33,19 @@ function drawStationFocus(ctx, state) {
   oval(ctx, station.standX, station.standY + 14, 11, 4, '#ffce749c');
 }
 
-export function drawRoom(ctx) {
-  if (!kitchenBackdrop) {
-    kitchenBackdrop = document.createElement('canvas');
-    kitchenBackdrop.width = 1280;
-    kitchenBackdrop.height = 800;
-    paintRoom(kitchenBackdrop.getContext('2d'));
+export function drawRoom(ctx, cover = false) {
+  const scene = cover ? 'cover' : 'service';
+  if (!kitchenBackdrops[scene]) {
+    const backdrop = document.createElement('canvas');
+    backdrop.width = 1280;
+    backdrop.height = 800;
+    paintRoom(backdrop.getContext('2d'), cover);
+    kitchenBackdrops[scene] = backdrop;
   }
-  ctx.drawImage(kitchenBackdrop, 0, 0);
+  ctx.drawImage(kitchenBackdrops[scene], 0, 0);
 }
 
-function paintRoom(ctx) {
+function paintRoom(ctx, cover) {
   const wall = ctx.createLinearGradient(0, 0, 0, 265);
   wall.addColorStop(0, '#102822');
   wall.addColorStop(.75, '#16322a');
@@ -74,7 +77,11 @@ function paintRoom(ctx) {
   }
   panel(ctx, 43, 211, 1194, 137, 6, '#49372c', '#8e6750', 1);
   for (const y of [218, 235, 249]) stroke(ctx, '#e4a76624', 1, [[47, y], [1232, y]]);
-  drawLanternString(ctx);
+  if (cover) {
+    label(ctx, 'WASD walk · E chop/use · CLICK station', 795, 231, 25, palette.light, { align: 'center' });
+  } else {
+    drawLanternString(ctx);
+  }
   panel(ctx, 42, 345, 1196, 16, 3, '#213b32');
   panel(ctx, 42, 350, 1196, 6, 2, '#a27a4d');
   for (let x = 50; x < 1238; x += 27) stroke(ctx, '#cd9e644f', 2, [[x, 351], [x + 4, 355]]);
@@ -127,7 +134,7 @@ function floorDrain(ctx, x, y) {
   for (let offset = -6; offset <= 6; offset += 4) stroke(ctx, '#789386', 1.5, [[x + offset, y - 6], [x + offset, y + 6]]);
 }
 
-let kitchenBackdrop;
+const kitchenBackdrops = {};
 
 function drawFurniture(ctx, state) {
   const cover = state.shot === 'cover';
