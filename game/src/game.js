@@ -29,10 +29,13 @@ export function startGame() {
     if (state.shot === 'rush') drawRushView(kitchenContext, state);
     else {
       let route = null;
+      let nextStep;
       if (state.showRoute && state.screen === 'play') {
-        route = state.shot === 'cover' ? coverPlan : routeForTicket(state);
+        const ticketRoute = routeForTicket(state);
+        route = state.shot === 'cover' ? coverPlan : ticketRoute;
+        nextStep = ticketRoute[0];
       }
-      drawKitchen(kitchenContext, state, route);
+      drawKitchen(kitchenContext, state, route, nextStep, stillShot ? 0 : state.coverMotion ?? state.elapsed);
       drawServiceHud(kitchenContext, state);
     }
     requestAnimationFrame(renderServiceFrame);

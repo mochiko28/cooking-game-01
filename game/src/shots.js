@@ -104,7 +104,7 @@ function stageCover(state) {
 }
 
 export function moveCoverCook(state) {
-  const progress = ((state.coverMotion + 1.18) % 3) / 3;
+  const progress = ((state.coverMotion + .54) % 3) / 3;
   const mix = (from, to) => from + (to - from) * progress;
   const [x, y] = coverStart.map((value, axis) => mix(mix(value, coverControl[axis]), mix(coverControl[axis], coverEnd[axis])));
   state.cook.x = x;
@@ -113,7 +113,7 @@ export function moveCoverCook(state) {
 
 const [chop, , plate, pass] = worktops;
 const coverStart = routePoint(chop);
-const coverEnd = routePoint(burners[1]);
+const coverEnd = routePoint(plate);
 const coverControl = routeSegment(coverStart, coverEnd);
 
 export function drawRushView(ctx, state) {

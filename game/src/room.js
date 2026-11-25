@@ -1,17 +1,20 @@
 // Draws the kitchen floor, its fixtures, and the cook’s route.
-import { coverIsland, floorBounds, ingredients, nearbyStation, pantry } from './stations.js';
+import { coverIsland, floorBounds, ingredients, nearbyStation, pantry, sink, worktops } from './stations.js';
 import { drawPass, drawPlating, drawServePop, drawStove, drawWorkstations } from './worktops.js';
 import { drawIngredient, drawKitchenSign, drawWoodGrain, label, oval, palette, panel, stroke } from './paint.js';
 
-export function drawKitchen(ctx, state, route) {
+export function drawKitchen(ctx, state, route, nextStep, motion) {
   const cover = state.shot === 'cover';
   drawRoom(ctx, cover);
   drawFurniture(ctx, state);
   drawStove(ctx, state);
   drawPlating(ctx, state);
   drawPass(ctx, state);
+  if (nextStep?.id === 'plate') {
+    for (const { x, y, w, h } of [...pantry, worktops[1], sink]) mutePanel(ctx, x, y, w, h);
+  }
   drawStationFocus(ctx, state);
-  drawRoute(ctx, state, route);
+  drawRoute(ctx, state, route, nextStep, motion);
   drawCook(ctx, state);
   for (const bit of state.particles) {
     ctx.globalAlpha = Math.min(1, bit.left * 4);
@@ -240,27 +243,28 @@ function drawCook(ctx, state) {
   ctx.restore();
 }
 
-function drawRoute(ctx, state, route) {
+function drawRoute(ctx, state, route, nextStep, motion) {
   if (!route) return;
-  if (state.shot === 'cover') {
-    drawCoverRoute(ctx, route);
-    return;
-  }
   const { cook } = state;
   const origin = [cook.x, cook.y + 20];
+  if (state.shot === 'cover') {
+    drawCoverRoute(ctx, route, origin, nextStep, motion);
+    return;
+  }
   if (!route.length) return;
   const points = route.map(routePoint);
-  drawTrail(ctx, origin, points);
+  if (points.length > 1) drawTrail(ctx, points[0], points.slice(1));
+  drawNextStep(ctx, origin, nextStep, motion);
   points.forEach(([x, y], index) => {
     const visits = points.flatMap(([px, py], order) => px === x && py === y ? [order + 1] : []);
     if (visits[0] !== index + 1) return;
-    if (visits.length > 1) panel(ctx, x - 31, y - 17, 62, 34, 14, palette.gold, '#283d31', 3);
-    else oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
+    if (visits.length > 1) panel(ctx, x - 31, y - 17, 62, 34, 14, index === 0 ? '#ecf4b5' : palette.gold, '#283d31', 3);
+    else drawRouteMarker(ctx, x, y, index === 0);
     label(ctx, visits.join('·'), x, y + 1, 23, '#25342a', { align: 'center' });
   });
 }
 
-function drawCoverRoute(ctx, { stops, detour }) {
+function drawCoverRoute(ctx, { stops, detour }, origin, nextStep, motion) {
   const points = stops.map(routePoint);
   const [chop, stove, plate] = points;
 
@@ -275,16 +279,18 @@ function drawCoverRoute(ctx, { stops, detour }) {
   ctx.setLineDash([8, 7]);
   ctx.lineCap = 'round';
   ctx.lineWidth = 4;
-  ctx.strokeStyle = '#d6e1bd98';
+  ctx.strokeStyle = '#d6e1bd78';
   ctx.stroke();
   ctx.restore();
 
   drawTrail(ctx, chop, [stove, plate]);
+  if (nextStep) drawNextStep(ctx, origin, nextStep, motion);
   const labels = ['CHOP', 'STOVE', 'PLATE'];
   points.forEach(([x, y], index) => {
-    panel(ctx, x - 36, y + 18, 82, 23, 7, '#203b30');
-    label(ctx, labels[index], x + 5, y + 30, 20, '#fff1bf', { align: 'center' });
-    oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
+    const active = stops[index] === nextStep;
+    panel(ctx, x - 36, y + 18, 82, 23, 7, active ? '#ecf4b5' : '#203b30');
+    label(ctx, labels[index], x + 5, y + 30, 20, active ? '#22372b' : '#fff1bf', { align: 'center' });
+    drawRouteMarker(ctx, x, y, active);
     label(ctx, String(index + 1), x, y + 1, 23, '#25342a', { align: 'center' });
   });
 }
@@ -300,10 +306,42 @@ function drawCoverRouteChoices(ctx, [direct, aroundIsland]) {
     if (chosen) stroke(ctx, ink, 4, [[x + 17, 773], [x + 24, 780], [x + 37, 765]]);
     label(ctx, name, x + (chosen ? 49 : 16), 772, 29, ink, { weight: 850 });
     label(ctx, `${seconds} s`, x + width - 17, 772, 31, ink, { align: 'right', weight: 900 });
+    if (!chosen) mutePanel(ctx, x, 752, width, 41);
   }
 }
 
-function drawTrail(ctx, from, points) {
+function mutePanel(ctx, x, y, w, h) {
+  panel(ctx, x, y, w, h, 7, '#17292133');
+}
+
+function drawNextStep(ctx, from, station, motion) {
+  const [x, y] = from;
+  const halo = ctx.createRadialGradient(x + 15, y - 29, 12, x + 15, y - 29, 94);
+  halo.addColorStop(0, '#efff9c44');
+  halo.addColorStop(1, '#efff9c00');
+  oval(ctx, x + 15, y - 29, 94, 94, halo);
+  const target = routePoint(station);
+  if (Math.hypot(target[0] - x, target[1] - y) > 24) drawTrail(ctx, from, [target], motion);
+
+  ctx.save();
+  ctx.shadowColor = '#e4fa90';
+  ctx.shadowBlur = 15 + Math.sin(motion * Math.PI * 2) * 3;
+  if (station.id === 'plate') {
+    oval(ctx, 665, 672, 72, 48, null, '#eafb9d', 4);
+  } else {
+    const { x, y, w, h } = station;
+    panel(ctx, x - 2, y - 2, w + 4, h + 4, 9, null, '#eafb9d', 3);
+  }
+  ctx.restore();
+}
+
+function drawRouteMarker(ctx, x, y, active) {
+  if (active) oval(ctx, x, y, 23, 23, '#deee9c30', '#d9ed8da0', 2);
+  oval(ctx, x, y, 17, 17, active ? '#ecf4b5' : palette.gold, '#283d31', 3);
+}
+
+function drawTrail(ctx, from, points, motion) {
+  const active = motion !== undefined;
   ctx.save();
   ctx.beginPath();
   ctx.moveTo(...from);
@@ -313,12 +351,17 @@ function drawTrail(ctx, from, points) {
     from = to;
   }
   ctx.lineCap = 'round';
-  ctx.setLineDash([1, 14]);
+  ctx.setLineDash(active ? [1, 17] : [1, 14]);
+  if (active) ctx.lineDashOffset = -motion * 54;
   ctx.strokeStyle = '#19382d';
-  ctx.lineWidth = 9;
+  ctx.lineWidth = active ? 14 : 9;
   ctx.stroke();
-  ctx.strokeStyle = '#ffe3a0';
-  ctx.lineWidth = 5;
+  if (active) {
+    ctx.shadowColor = '#d9f47a';
+    ctx.shadowBlur = 12;
+  }
+  ctx.strokeStyle = active ? '#f2ffb2' : '#ffe3a0';
+  ctx.lineWidth = active ? 9 : 5;
   ctx.stroke();
   ctx.restore();
 }
