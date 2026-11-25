@@ -127,8 +127,6 @@ export function chopIngredient(state) {
   if (!board.food || board.cuts >= cutsNeeded) return;
   board.cuts++;
   board.mark = state.elapsed;
-  burst(state, 144, 653, ingredients[board.food.id].hue);
-  burst(state, 151, 647, '#fff2ab', 5);
   state.sound('chop');
   if (board.cuts === cutsNeeded) {
     board.food.stage = ingredients[board.food.id].route === 'both'

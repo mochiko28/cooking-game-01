@@ -2,7 +2,7 @@
 import { recipes, spawnOrder, ticketCapacity } from './orders.js';
 import { serviceWave, shiftLength } from './shift.js';
 import { chooseFastestRoute, estimateRouteSeconds } from './route.js';
-import { burners, chopIngredient, coverIsland, ingredients, moveParticles, simmerSeconds, useStation, worktops } from './stations.js';
+import { burners, chopIngredient, coverIsland, ingredients, simmerSeconds, useStation, worktops } from './stations.js';
 import { drawRoom, routePoint, routeSegment } from './room.js';
 import { drawBurner, drawServePop } from './worktops.js';
 import { drawLastCall, drawUrgentClock } from './hud.js';
@@ -100,10 +100,11 @@ function stageCover(state) {
   state.pots[1].age = 11.5;
   state.coverMotion = .32;
   moveCoverCook(state);
-  state.elapsed -= .13;
+  const cutAge = .095;
+  state.coverCutMotion = state.coverMotion;
+  state.elapsed -= cutAge;
   chopIngredient(state);
-  moveParticles(state, .13);
-  state.elapsed += .13;
+  state.elapsed += cutAge;
 }
 
 export function moveCoverCook(state) {

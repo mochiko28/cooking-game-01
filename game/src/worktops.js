@@ -35,48 +35,98 @@ function drawChopBoard(ctx, state, largerLabels) {
   panel(ctx, 61, 622, 206, 71, 7, '#ae763f', '#edb471');
   for (const y of [634, 672, 685]) stroke(ctx, '#d4995c', 1.5, [[70, y], [254, y]]);
   oval(ctx, 253, 657, 5, 9, '#6d462d');
-  const sinceCut = state.elapsed - state.board.mark;
+  const { food, cuts, mark } = state.board;
+  const sinceCut = state.elapsed - mark;
   const cover = state.shot === 'cover';
-  const swing = cover ? (state.coverMotion - .19 + 3) % .6 : sinceCut;
-  const chopping = swing < .17;
-  if (state.board.food) drawIngredient(ctx, state.board.food.id, 132, 656, 1.14, state.board.cuts >= 3 ? 'chopped' : 'raw');
-  if (cover && swing < .34) {
-    const lift = 1 - (swing - .17) ** 2 * 19;
-    for (const [x, y, angle] of [[87, 637, -.4], [108, 647, .35], [124, 624, -.25], [143, 633, .5], [157, 647, -.5]]) {
+  const age = cover ? (sinceCut + state.coverMotion - state.coverCutMotion + 3) % .6 : sinceCut;
+  if (food) drawIngredient(ctx, food.id, 123, 665, 1.14, cuts >= 3 ? 'chopped' : 'raw');
+  drawCut(age, food);
+
+  if (cover) drawChopPop(ctx, (state.coverMotion - .19 + 3) % .6, cuts, cover);
+  else if (sinceCut < .58) drawChopPop(ctx, sinceCut, cuts, cover);
+
+  if (food && cuts < 4) {
+    panel(ctx, 61, 700, 206, 31, 6, '#43392c', '#80532f');
+    for (let i = 0; i < 4; i++) {
+      const x = 67 + i * 35;
+      const filled = i < cuts;
+      panel(ctx, x, 705, 30, 21, 3, filled ? '#a7cc67' : '#282f27', filled ? '#daea9d' : '#948672');
+      if (filled) stroke(ctx, '#e6f2aa', 2, [[x + 4, 709], [x + 26, 709]]);
+    }
+    label(ctx, `${cuts} / 4`, 234, 716, 26, '#fff1cd', { align: 'center', weight: 900 });
+  } else {
+    meter(ctx, 62, 703, 204, 6, cuts / 4, '#335a45', '#9e6c48');
+    label(ctx, cuts === 4 ? 'PICK UP' : 'HOLD TO CHOP', 164, 721, largerLabels ? 26 : 16, '#3b2b20', { align: 'center', maxWidth: 204 });
+  }
+
+  function drawCut(age, food) {
+    ctx.save();
+    ctx.translate(226, 654);
+    if (food && age < .18) {
+      ctx.globalAlpha = Math.min(1, (.18 - age) / .075);
+      ctx.beginPath();
+      ctx.moveTo(-75, -1);
+      ctx.quadraticCurveTo(-68, -38, -31, -28);
+      ctx.quadraticCurveTo(-56, -30, -75, -1);
+      ctx.closePath();
+      ctx.fillStyle = '#ffda8a';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(-74, -3);
+      ctx.quadraticCurveTo(-61, -28, -40, -28);
+      ctx.moveTo(-75, -19);
+      ctx.quadraticCurveTo(-69, -29, -58, -33);
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#fff8d5';
+      ctx.lineWidth = 2.8;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    const rebound = food ? Math.min(1, age / .19) : 1;
+    ctx.rotate(.03 + .39 * rebound);
+    panel(ctx, -70, -5, 70, 24, 4, '#afc9c3', '#384e43', 2.5);
+    stroke(ctx, '#f6ffe9', 3, [[-65, 15], [-5, 15]]);
+    panel(ctx, -4, -5, 30, 13, 4, '#49372a', '#30271f');
+    oval(ctx, 11, 1, 2.4, 2.4, '#dbab68');
+    ctx.restore();
+
+    if (!food || age >= .31) return;
+    ctx.save();
+    ctx.globalAlpha = Math.min(1, (.31 - age) / .12);
+    // The pieces fan out at impact, then fall back toward the board.
+    const travel = .16 * (1 - Math.exp(-age * 10));
+    for (const [dx, dy, size, spin] of [
+      [-580, -260, 14, -7], [-380, -390, 12, 8], [-190, -440, 14, -5],
+      [-68, -335, 8, 10], [95, -265, 9, 7], [-510, -100, 5, 4], [-275, -235, 6, -9],
+    ]) {
+      const x = 155 + dx * travel;
+      const y = 660 + dy * travel + 1450 * travel ** 2;
       ctx.save();
-      ctx.translate(146 + (x - 146) * lift, 661 + (y - 661) * lift);
-      ctx.rotate(angle);
-      panel(ctx, -7, -4, 14, 8, 2, '#c8e88b', '#426a3b');
+      ctx.translate(x, y);
+      ctx.rotate(spin * age);
+      const color = food.id === 'greens' && spin > 0 ? '#bbdc76' : ingredients[food.id].hue;
+      panel(ctx, -size / 2, -size / 3, size, size * .67, 2, color, '#334633', 1.5);
+      stroke(ctx, '#fff2b3', 1.4, [[-size / 3, -size / 6], [size / 4, -size / 6]]);
       ctx.restore();
     }
-  }
-  ctx.save();
-  if (cover && chopping) {
-    for (const [radius, start, end, color] of [[77, 3.08, 3.69, '#fff0c4'], [88, 3.29, 3.61, '#ffd58e']]) {
+    if (age < .14) {
+      ctx.globalAlpha = Math.min(1, (.14 - age) / .055);
+      const rays = [
+        [4, -5], [17, -8], [8, 0], [17, 7], [4, 5], [0, 13],
+        [-4, 5], [-14, 5], [-7, 0], [-14, -8], [-4, -5],
+      ];
       ctx.beginPath();
-      ctx.arc(237, 660, radius, start, end);
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 4;
-      ctx.lineCap = 'round';
+      ctx.moveTo(155, 645);
+      for (const [x, y] of rays) ctx.lineTo(155 + x, 660 + y);
+      ctx.closePath();
+      ctx.strokeStyle = '#eaa64d';
+      ctx.lineWidth = 3;
       ctx.stroke();
+      ctx.fillStyle = '#fff8d5';
+      ctx.fill();
     }
+    ctx.restore();
   }
-  ctx.translate(220, 655);
-  ctx.rotate(cover && chopping ? .81 - swing * 2 : chopping ? -.24 : -.63);
-  panel(ctx, -57, -3, 56, 25, 4, '#b8ceca', '#53665e');
-  stroke(ctx, '#effcea', 3, [[-52, 18], [-5, 18]]);
-  panel(ctx, -4, -3, 30, 12, 4, '#49372a');
-  oval(ctx, 11, 3, 2.4, 2.4, '#dbab68');
-  ctx.restore();
-  if (!cover && chopping) {
-    stroke(ctx, '#fff2c6', 3, [[148, 644], [137, 633]]);
-    stroke(ctx, '#fff2c6', 3, [[156, 639], [154, 626]]);
-    stroke(ctx, '#ffe299', 2.4, [[165, 639], [172, 630]]);
-  }
-  if (cover || sinceCut < .58) drawChopPop(ctx, swing, state.board.cuts, cover);
-  meter(ctx, 62, 703, 204, 6, state.board.cuts / 4, '#335a45', '#9e6c48');
-  const status = state.board.cuts === 4 ? 'PICK UP' : state.board.food ? `${state.board.cuts} / 4 CUTS` : 'HOLD TO CHOP';
-  label(ctx, status, 164, 721, largerLabels ? 26 : 16, '#3b2b20', { align: 'center', maxWidth: 204 });
 }
 
 function drawChopPop(ctx, age, cuts, cover) {
