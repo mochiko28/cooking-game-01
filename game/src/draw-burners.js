@@ -26,9 +26,14 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed) {
     panel(ctx, -52, -11, 104, 9, 4, '#a3ada0', '#192d27');
     oval(ctx, 0, 1, 38, 22, '#4b7470', '#253531', 2);
     oval(ctx, 0, -8, 38, 20, '#b7c4aa', '#f8e2b4', 2);
-    oval(ctx, 0, -8, 32, 14, phase === 'burnt' ? '#473126' : '#a95731');
-    oval(ctx, -9, -13, 11, 2, '#e99854');
-    drawIngredient(ctx, pot.food.id, 0, -8, .69, phase === 'cooked' ? 'ready' : pot.food.stage);
+    const broth = ctx.createLinearGradient(0, -22, 0, 6);
+    broth.addColorStop(0, phase === 'burnt' ? '#52382a' : '#893d27');
+    broth.addColorStop(.48, phase === 'burnt' ? '#654532' : '#dc8b44');
+    broth.addColorStop(1, phase === 'burnt' ? '#382a23' : '#9c4c29');
+    oval(ctx, 0, -8, 32, 14, broth);
+    oval(ctx, -17, -11, 10, 2.4, '#fac987a0');
+    const platingStage = phase === 'cooked' || (pot.food.id === 'egg' && pot.age >= 1) ? 'ready' : pot.food.stage;
+    drawIngredient(ctx, pot.food.id, 0, -8, .69, platingStage);
     drawSteam(ctx, 3, -13, elapsed, phase === 'burnt');
   }
   const colors = { empty: '#ead4ac', simmering: '#f7b66d', cooked: '#c8e49a', burnt: '#ff977d' };

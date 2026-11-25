@@ -4,8 +4,6 @@ import { serviceWave } from './service-waves.js';
 import { recordService } from './combo-streak.js';
 import { vipClock, vipTip } from './vip-tickets.js';
 
-export const ticketCapacity = 4;
-
 export function spawnOrder(state, { recipe, left, patience, vipLeft } = {}) {
   const wave = serviceWave(state.elapsed);
   const number = state.nextTicket++;
@@ -57,3 +55,5 @@ export function scoreServe(state, recipe) {
   const bonus = vipTip(ticket);
   return { coins: recordService(state, ticket, bonus), bonus };
 }
+
+export const ticketCapacity = 4;

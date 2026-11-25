@@ -1,9 +1,6 @@
 // Runs two independently timed burners and handles loading, lifting, and burning.
 import { needsCooking } from './ingredients.js';
 
-export const simmerSeconds = 4.2;
-const burnSeconds = 7;
-
 export function stovePhase(pot) {
   if (!pot.food) return 'empty';
   if (pot.age < simmerSeconds) return 'simmering';
@@ -47,3 +44,6 @@ export function useStove(state, index) {
   if (phase !== 'empty') return 'Free a hand to lift this burner.';
   return 'Cook noodles, egg, shrimp, or chopped mushrooms here.';
 }
+
+export const simmerSeconds = 4.2;
+const burnSeconds = 7;

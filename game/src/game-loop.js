@@ -8,14 +8,6 @@ import { moveParticles } from './particles.js';
 import { nearbyStation } from './kitchen-layout.js';
 import { useStation } from './stations.js';
 
-function randomSequence(seed) {
-  let value = seed >>> 0;
-  return () => {
-    value = (Math.imul(value, 1664525) + 1013904223) >>> 0;
-    return value / 4294967296;
-  };
-}
-
 export function createShift(seed, sound, announce) {
   const state = {
     elapsed: 0, screen: 'title', orders: [], nextTicket: 1, nextArrival: 14,
@@ -68,4 +60,12 @@ export function updateShift(state, dt, controls) {
     walkCook(state, controls.x, controls.y, dt);
   }
   if ((state.mouseChop || controls.use) && nearbyStation(state.cook)?.id === 'chop') holdToChop(state);
+}
+
+function randomSequence(seed) {
+  let value = seed >>> 0;
+  return () => {
+    value = (Math.imul(value, 1664525) + 1013904223) >>> 0;
+    return value / 4294967296;
+  };
 }

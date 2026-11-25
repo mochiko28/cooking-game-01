@@ -1,17 +1,10 @@
 // Normalizes keyboard and pointer input into kitchen controls.
 import { stationAt } from './kitchen-layout.js';
 
-const up = ['KeyW', 'ArrowUp'];
-const down = ['KeyS', 'ArrowDown'];
-const left = ['KeyA', 'ArrowLeft'];
-const right = ['KeyD', 'ArrowRight'];
-const use = ['KeyE', 'Space'];
-const actions = [...up, ...down, ...left, ...right, ...use, 'KeyR', 'KeyQ', 'KeyT', 'KeyP', 'KeyM', 'Escape', 'Enter'];
-
 export function bindKitchenInput(canvas, handlers) {
   const held = new Set();
   window.addEventListener('keydown', event => {
-    if (!actions.includes(event.code)) return;
+    if (!kitchenKeys.includes(event.code)) return;
     if (event.target instanceof HTMLButtonElement && ['Space', 'Enter'].includes(event.code)) return;
     event.preventDefault();
     held.add(event.code);
@@ -38,7 +31,18 @@ export function bindKitchenInput(canvas, handlers) {
 
   const pressed = codes => Number(codes.some(code => held.has(code)));
   return {
-    read: () => ({ x: pressed(right) - pressed(left), y: pressed(down) - pressed(up), use: pressed(use) }),
+    read: () => ({
+      x: pressed(walkRightKeys) - pressed(walkLeftKeys),
+      y: pressed(walkDownKeys) - pressed(walkUpKeys),
+      use: pressed(stationUseKeys),
+    }),
     clear: () => held.clear(),
   };
 }
+
+const walkUpKeys = ['KeyW', 'ArrowUp'];
+const walkDownKeys = ['KeyS', 'ArrowDown'];
+const walkLeftKeys = ['KeyA', 'ArrowLeft'];
+const walkRightKeys = ['KeyD', 'ArrowRight'];
+const stationUseKeys = ['KeyE', 'Space'];
+const kitchenKeys = [...walkUpKeys, ...walkDownKeys, ...walkLeftKeys, ...walkRightKeys, ...stationUseKeys, 'KeyR', 'KeyQ', 'KeyT', 'KeyP', 'KeyM', 'Escape', 'Enter'];

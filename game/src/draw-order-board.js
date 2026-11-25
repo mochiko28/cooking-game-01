@@ -5,17 +5,6 @@ import { drawIngredient } from './draw-food.js';
 import { focusedTicket, ticketCapacity } from './order-board.js';
 import { vipSeconds } from './vip-tickets.js';
 
-const startX = 36;
-const ticketY = 119;
-const gap = 304;
-const ticketWidth = 292;
-const ticketHeight = 79;
-
-export function ticketAt(state, x, y) {
-  if (y < ticketY || y > ticketY + ticketHeight || x < startX || (x - startX) % gap > ticketWidth) return null;
-  return state.orders[Math.floor((x - startX) / gap)] ?? null;
-}
-
 export function drawOrderBoard(ctx, state) {
   panel(ctx, 20, 92, 1240, 112, 12, '#203930', '#725d47', 2);
   label(ctx, 'ORDER BOARD', 37, 106, 21, palette.light);
@@ -26,11 +15,16 @@ export function drawOrderBoard(ctx, state) {
   }
   label(ctx, `${state.orders.length} / ${ticketCapacity} TICKETS`, 1242, 106, 16, '#ced8bd', { align: 'right' });
   for (let i = 0; i < ticketCapacity; i++) {
-    const x = startX + gap * i;
+    const x = ticketRailX + ticketSpacing * i;
     const ticket = state.orders[i];
     if (ticket) drawTicket(ctx, ticket, x, ticket === focus);
     else panel(ctx, x, ticketY, ticketWidth, ticketHeight, 7, '#19322a', '#416253');
   }
+}
+
+export function ticketAt(state, x, y) {
+  if (y < ticketY || y > ticketY + ticketHeight || x < ticketRailX || (x - ticketRailX) % ticketSpacing > ticketWidth) return null;
+  return state.orders[Math.floor((x - ticketRailX) / ticketSpacing)] ?? null;
 }
 
 function drawTicket(ctx, ticket, x, focused) {
@@ -47,7 +41,7 @@ function drawTicket(ctx, ticket, x, focused) {
     drawIngredient(ctx, id, x + 96 + index * 38, y + 49, .46, 'ready');
   });
   const progress = ticket.left / ticket.patience;
-  meter(ctx, x + 7, y + 67, ticketWidth - 14, 6, progress, progress <= .28 ? '#b73a2e' : '#387451', '#d2b797');
+  meter(ctx, x + 7, y + 65, ticketWidth - 14, 8, progress, patienceColor(progress), '#d2b797');
   if (vip) {
     const time = Math.ceil(ticket.vipLeft);
     panel(ctx, x + 229, y + 7, 56, 54, 5, activeBonus ? '#963b2c' : '#6c5a4d');
@@ -58,3 +52,15 @@ function drawTicket(ctx, ticket, x, focused) {
     label(ctx, '◆', x + 275, y + 18, 17, '#88612c', { align: 'center' });
   }
 }
+
+function patienceColor(progress) {
+  if (progress <= .34) return '#ce422e';
+  if (progress <= .68) return '#b7721c';
+  return '#3c8754';
+}
+
+const ticketRailX = 36;
+const ticketY = 119;
+const ticketSpacing = 304;
+const ticketWidth = 292;
+const ticketHeight = 79;

@@ -5,7 +5,28 @@ import { drawDish } from './draw-dish.js';
 import { drawIngredient } from './draw-food.js';
 import { comboMultiplier, shiftStars } from './combo-streak.js';
 
-const prepLabel = { pour: 'Pour', cook: 'Cook', chop: 'Chop', both: 'Chop + cook' };
+export function renderScreen(element, state) {
+  element.hidden = state.screen === 'play';
+  if (element.hidden) return;
+  const screens = {
+    title: titleScreen,
+    recipes: recipeBook,
+    results: () => resultsScreen(state),
+    pause: () => `<div class="sheet pause-sheet">
+      <p class="kicker">LANTERN &amp; LADLE</p><h1>Service paused</h1>
+      <button class="primary" data-command="close">Resume <kbd>P</kbd></button>
+      <button class="quiet" data-command="recipes">Tonight’s menu <kbd>R</kbd></button>
+    </div>`,
+  };
+  element.innerHTML = screens[state.screen]();
+  for (const canvas of element.querySelectorAll('[data-dish]')) {
+    const recipe = recipes.find(item => item.id === canvas.dataset.dish);
+    drawDish(canvas.getContext('2d'), recipe.layers, canvas.width / 2, canvas.height * .46, canvas.width / 120, recipe.color, recipe.shape);
+  }
+  for (const canvas of element.querySelectorAll('[data-food]')) {
+    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, 28, 26, .82, 'ready');
+  }
+}
 
 function recipeBook() {
   return `<div class="sheet book-sheet">
@@ -21,7 +42,7 @@ function recipeBook() {
       </div>
       <ol class="steps">${recipe.layers.map(id => `<li>
         <canvas width="57" height="51" data-food="${id}" aria-hidden="true"></canvas>
-        <span><b>${ingredients[id].name}</b><small>${prepLabel[ingredients[id].route]}</small></span>
+        <span><b>${ingredients[id].name}</b><small>${ingredientPrepLabel[ingredients[id].route]}</small></span>
       </li>`).join('')}</ol>
     </article>`).join('')}
     </div>
@@ -68,25 +89,4 @@ function resultsScreen(state) {
   </div>`;
 }
 
-export function renderScreen(element, state) {
-  element.hidden = state.screen === 'play';
-  if (element.hidden) return;
-  const screens = {
-    title: titleScreen,
-    recipes: recipeBook,
-    results: () => resultsScreen(state),
-    pause: () => `<div class="sheet pause-sheet">
-      <p class="kicker">LANTERN &amp; LADLE</p><h1>Service paused</h1>
-      <button class="primary" data-command="close">Resume <kbd>P</kbd></button>
-      <button class="quiet" data-command="recipes">Tonight’s menu <kbd>R</kbd></button>
-    </div>`,
-  };
-  element.innerHTML = screens[state.screen]();
-  for (const canvas of element.querySelectorAll('[data-dish]')) {
-    const recipe = recipes.find(item => item.id === canvas.dataset.dish);
-    drawDish(canvas.getContext('2d'), recipe.layers, canvas.width / 2, canvas.height * .46, canvas.width / 120, recipe.color, recipe.shape);
-  }
-  for (const canvas of element.querySelectorAll('[data-food]')) {
-    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, 28, 26, .82, 'ready');
-  }
-}
+const ingredientPrepLabel = { pour: 'Pour', cook: 'Cook', chop: 'Chop', both: 'Chop + cook' };

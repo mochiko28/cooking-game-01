@@ -4,8 +4,6 @@ import { burners, pantry, sink, worktops } from './kitchen-layout.js';
 import { needsChopping, needsCooking, pickIngredient } from './ingredients.js';
 import { stovePhase } from './cooking-stove.js';
 
-const [chop, , plate, pass] = worktops;
-
 export function routeForTicket(state, ticket = focusedTicket(state)) {
   if (!ticket) return [];
   const { recipe } = ticket;
@@ -51,3 +49,5 @@ function layerRoute(state, id) {
   }
   return { stations };
 }
+
+const [chop, , plate, pass] = worktops;

@@ -1,5 +1,7 @@
 // Stages fixed game states for the four deterministic presentation screenshots.
 import { spawnOrder } from './order-board.js';
+import { chopIngredient } from './chopping.js';
+import { moveParticles } from './particles.js';
 import { recipes } from './recipes.js';
 import { shiftLength } from './shift-timer.js';
 
@@ -26,8 +28,10 @@ export function stageScreenshot(state, scene) {
   state.cook.facing = -1;
   state.cook.hand = { id: 'greens', stage: 'raw' };
 
+  if (scene === 'cover') stageChopImpact(state);
+
   if (scene === 'rush') {
-    state.elapsed = 113;
+    state.elapsed = 153;
     state.coins = 466;
     state.served = 7;
     state.combo = 5;
@@ -39,7 +43,7 @@ export function stageScreenshot(state, scene) {
 
   const rush = scene === 'rush';
   [rush ? ember : garden, tide, rush ? harvest : gold, moon].forEach((recipe, index) => {
-    const left = (rush ? [10, 22, 26, 41] : [42, 49, 23, 57])[index];
+    const left = (rush ? [10, 22, 26, 41] : [42, 49, 21, 57])[index];
     spawnOrder(state, { recipe, left, patience: 64, vipLeft: index === 2 ? (rush ? 11 : 17) : undefined });
   });
   if (scene === 'recipes') state.screen = 'recipes';
@@ -52,4 +56,16 @@ export function stageScreenshot(state, scene) {
     state.bestCombo = 6;
     state.missed = 2;
   }
+}
+
+function stageChopImpact(state) {
+  state.cook.x = 225;
+  state.cook.y = 537;
+  state.cook.hand = null;
+  state.board.food = { id: 'greens', stage: 'raw' };
+  state.board.cuts = 1;
+  state.elapsed -= .13;
+  chopIngredient(state);
+  moveParticles(state, .13);
+  state.elapsed += .13;
 }

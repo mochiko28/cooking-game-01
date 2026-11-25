@@ -2,14 +2,13 @@
 import { ingredients, needsChopping } from './ingredients.js';
 import { burst } from './particles.js';
 
-const cutsNeeded = 4;
-
 export function chopIngredient(state) {
   const board = state.board;
   if (!board.food || board.cuts >= cutsNeeded) return;
   board.cuts++;
   board.mark = state.elapsed;
-  burst(state, 142, 656, ingredients[board.food.id].hue);
+  burst(state, 144, 653, ingredients[board.food.id].hue);
+  burst(state, 151, 647, '#fff2ab', 5);
   state.sound('chop');
   if (board.cuts === cutsNeeded) {
     board.food.stage = ingredients[board.food.id].route === 'both'
@@ -39,3 +38,5 @@ export function useChopBoard(state) {
 export function holdToChop(state) {
   if (state.elapsed - state.board.mark >= .24) chopIngredient(state);
 }
+
+const cutsNeeded = 4;

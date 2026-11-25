@@ -1,6 +1,7 @@
 // Shows the assembly checklist, plated dishes, and the lit serving window.
 import { label, oval, panel, stroke } from './canvas-ink.js';
 import { drawDish } from './draw-dish.js';
+import { drawKitchenSign } from './draw-labels.js';
 import { drawSteam } from './draw-steam.js';
 import { ingredients } from './ingredients.js';
 import { focusedTicket } from './order-board.js';
@@ -12,38 +13,66 @@ export function drawPlating(ctx, state) {
   const focus = focusedTicket(state)?.recipe;
   const recipe = choices.includes(focus) ? focus : choices.find(option => state.orders.some(ticket => ticket.recipe === option)) ?? choices[0];
   const resting = queuedPlate && !layers.length;
-  panel(ctx, 594, 620, 150, 105, 7, '#597c6b', '#42594c');
-  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac55', 1.2, [[600, y], [738, y]]);
+  panel(ctx, 592, 619, 174, 109, 7, '#41665a', '#31493d');
+  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[600, y], [758, y]]);
   const bounce = Math.max(0, 1 - (state.elapsed - state.platePop) * 7) * .13;
-  drawDish(ctx, resting ? queuedPlate.layers : layers, 667, 667, 1.18 + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
+  drawDish(ctx, resting ? queuedPlate.layers : layers, 679, 666, 1.49 + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
   const checklist = resting ? queuedPlate : recipe;
-  label(ctx, resting ? 'ON TRAY' : layers.length ? 'DISH IN PROGRESS' : 'NEXT DISH', 756, 629, 17, '#3b2c23');
+  drawKitchenSign(ctx, resting ? 'ON TRAY' : layers.length ? 'DISH IN PROGRESS' : 'NEXT DISH',
+    772, 618, 153, 22, { size: 14 });
   checklist.layers.forEach((id, i) => {
     const done = resting || i < layers.length;
     const next = !resting && i === layers.length;
-    if (next) panel(ctx, 751, 640 + i * 20, 174, 20, 4, '#ffe5ae');
-    label(ctx, done ? '✓' : next ? '›' : '·', 759, 650 + i * 20, 20, done ? '#254f39' : '#6f452e');
-    label(ctx, ingredients[id].name, 784, 650 + i * 20, 18, '#302d23');
-    if (next) label(ctx, 'NEXT', 918, 650 + i * 20, 11, '#78502e', { align: 'right' });
+    if (next) panel(ctx, 773, 644 + i * 19, 151, 19, 4, '#ffe5ae');
+    label(ctx, done ? '✓' : next ? '›' : '·', 781, 653 + i * 19, 19, done ? '#254f39' : '#6f452e');
+    label(ctx, ingredients[id].name, 797, 653 + i * 19, 16, '#302d23');
+    if (next) label(ctx, 'NEXT', 918, 653 + i * 19, 10, '#78502e', { align: 'right' });
   });
 }
 
 export function drawPass(ctx, state) {
   panel(ctx, 954, 620, 274, 104, 7, '#6e3f31', '#a9754f');
   for (let y = 627; y < 721; y += 15) stroke(ctx, '#cc88534d', 1.5, [[962, y], [1220, y]]);
-  oval(ctx, 1026, 667, 68, 43, null, '#b37e56');
+  oval(ctx, 1039, 667, 78, 44, null, '#b37e56');
   if (!state.ready) {
-    label(ctx, 'WAITING', 1209, 663, 21, '#ffe0b2', { align: 'right' });
+    drawKitchenSign(ctx, 'Waiting', 1121, 645, 95, 33, { size: 16 });
     return;
   }
 
-  const glow = ctx.createRadialGradient(1025, 664, 10, 1025, 664, 88);
-  glow.addColorStop(0, '#ffce7ded');
+  drawReadyHalo(ctx, 1039, 669);
+  drawDish(ctx, state.ready.layers, 1039, 663, 1.46, state.ready.color, state.ready.shape);
+  drawSteam(ctx, 1039, 653, state.elapsed);
+  drawReadySparkles(ctx, 1039, 669, state.elapsed);
+  drawKitchenSign(ctx, 'Ready', 1125, 642, 92, 34, { size: 22 });
+  label(ctx, state.ready.name, 1171, 698, 16, '#ffe5b7', { align: 'center' });
+}
+
+function drawReadyHalo(ctx, x, y) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(1, .59);
+  const glow = ctx.createRadialGradient(0, 0, 55, 0, 0, 85);
+  glow.addColorStop(0, '#ffbb6800');
+  glow.addColorStop(.7, '#ffbe5a85');
   glow.addColorStop(1, '#ffc45a00');
-  oval(ctx, 1025, 666, 79, 50, glow);
-  drawDish(ctx, state.ready.layers, 1026, 661, 1.16, state.ready.color, state.ready.shape);
-  drawSteam(ctx, 1026, 651, state.elapsed);
-  panel(ctx, 1100, 639, 111, 43, 6, '#ffcd69', '#fff0ae', 2);
-  label(ctx, 'READY', 1155, 661, 25, '#382b20', { align: 'center' });
-  label(ctx, state.ready.name, 1155, 702, 17, '#ffe5b7', { align: 'center' });
+  oval(ctx, 0, 0, 85, 85, glow);
+  oval(ctx, 0, 0, 80, 80, null, '#ffd281', 2.6);
+  ctx.restore();
+}
+
+function drawReadySparkles(ctx, x, y, elapsed) {
+  for (const [dx, dy, size, phase] of [[-75, -25, 8, 1], [-58, 33, 5, 3], [68, -31, 7, 5], [75, 24, 6, 6]]) {
+    ctx.save();
+    ctx.translate(x + dx, y + dy);
+    ctx.globalAlpha = .8 + .2 * Math.sin(elapsed * 4 + phase);
+    ctx.fillStyle = '#fff1b4';
+    ctx.beginPath();
+    ctx.moveTo(0, -size);
+    ctx.quadraticCurveTo(1, -1, size, 0);
+    ctx.quadraticCurveTo(1, 1, 0, size);
+    ctx.quadraticCurveTo(-1, 1, -size, 0);
+    ctx.quadraticCurveTo(-1, -1, 0, -size);
+    ctx.fill();
+    ctx.restore();
+  }
 }

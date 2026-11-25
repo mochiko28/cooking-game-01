@@ -18,7 +18,7 @@ export function assembleDish(state) {
     else state.ready = completed;
   }
   state.platePop = state.elapsed;
-  burst(state, completed && !state.queuedPlate ? 1024 : 666, 660, '#ffce72', completed ? 18 : 8);
+  burst(state, completed && !state.queuedPlate ? 1039 : 679, 660, '#ffce72', completed ? 18 : 8);
   state.sound(completed ? 'ding' : 'tick');
 }
 
@@ -30,7 +30,7 @@ export function serveReadyPlate(state) {
   state.queuedPlate = null;
   if (!service) return `No ticket for ${recipe.name}. The dish was cleared.`;
   state.sound('serve');
-  burst(state, 1024, 656, '#ffdb79', 22);
+  burst(state, 1039, 656, '#ffdb79', 22);
   const details = service.bonus ? 'VIP bonus!' : state.combo > 1 ? `×${comboMultiplier(state.combo)} tips` : 'Order served!';
   return `+${service.coins} coins  ·  ${details}`;
 }

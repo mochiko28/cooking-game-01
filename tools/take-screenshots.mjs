@@ -78,16 +78,16 @@ user_pref("devtools.console.stdout.content", true);
       throw new Error(`Unexpected browser render for ${shot.name}`);
     }
     let jpeg;
-    for (const quality of [3, 4, 5, 7]) {
+    for (const quality of [3, 4, 5, 7, 9]) {
       const encoded = spawnSync('ffmpeg', [
         '-v', 'error', '-threads', '1', '-i', screenshot, '-frames:v', '1',
         '-threads', '1', '-codec:v', 'mjpeg', '-q:v', String(quality), '-f', 'image2pipe', 'pipe:1',
       ]);
       if (encoded.status !== 0) throw new Error(encoded.error?.message ?? encoded.stderr.toString());
       jpeg = encoded.stdout;
-      if (jpeg.length <= 256 * 1024) break;
+      if (jpeg.length <= 240 * 1024) break;
     }
-    if (jpeg.length > 256 * 1024) throw new Error(`${shot.name} exceeds the screenshot budget`);
+    if (jpeg.length > 240 * 1024) throw new Error(`${shot.name} exceeds the 240 KiB screenshot budget`);
     await writeFile(new URL(shot.name, output), jpeg);
     console.log(`${shot.name} 1280 × 800 · ${jpeg.length} bytes`);
   }

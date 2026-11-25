@@ -2,20 +2,6 @@
 import { oval, stroke } from './canvas-ink.js';
 import { drawIngredient } from './draw-food.js';
 
-const placements = {
-  noodles: [-6, 0, 1.03], greens: [22, -10, .62], egg: [17, 9, .70],
-  tofu: [-20, 7, .67], shrimp: [-15, -8, .67], shrooms: [13, -6, .68],
-};
-
-function gloss(ctx, x, y, rx, ry, begin, end, color, width) {
-  ctx.beginPath();
-  ctx.ellipse(x, y, rx, ry, 0, begin, end);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = width;
-  ctx.lineCap = 'round';
-  ctx.stroke();
-}
-
 export function drawDish(ctx, layers, x, y, scale = 1, color = '#80bfa7', shape = 'bowl') {
   ctx.save();
   ctx.translate(x, y);
@@ -39,17 +25,19 @@ export function drawDish(ctx, layers, x, y, scale = 1, color = '#80bfa7', shape 
   fill.addColorStop(.40, soup ? '#e08532' : '#f9e7c6');
   fill.addColorStop(1, soup ? '#ad511e' : '#dfbe93');
   oval(ctx, 0, -1, 43, 22, fill, soup ? '#8b4c2f' : '#c9ab80', 1.5);
-  gloss(ctx, 0, -1, 50, 27, 3.42, 4.85, '#fffef2', 1.8);
+  paintDishGlint(ctx, 0, -1, 50, 27, 3.42, 4.85, '#fffef2', 1.8);
   if (soup) {
-    gloss(ctx, -1, -1, 38, 17, 2.66, 3.93, '#ffcf71', 2.1);
-    gloss(ctx, 1, 0, 38, 17, .15, .92, '#f9af59', 1.7);
+    paintDishGlint(ctx, -1, -1, 38, 17, 2.66, 3.93, '#ffcf71', 2.1);
+    paintDishGlint(ctx, 1, 0, 38, 17, .15, .92, '#f9af59', 1.7);
+    oval(ctx, 24, -9, 10, 3, '#ffc57680');
+    oval(ctx, 25, -10, 6, 1.3, '#ffe0a4');
     for (const [dx, dy, size] of [[-28, 8, 3], [28, -5, 4], [33, -2, 2], [-9, 13, 2], [15, -14, 2]]) {
       oval(ctx, dx, dy, size, size * .46, '#f3b360', '#b86030', .7);
     }
   }
   for (const id of layers) {
     if (id === 'broth') continue;
-    const [px, py, size] = placements[id];
+    const [px, py, size] = toppingPositions[id];
     const solo = layers.length === 1;
     drawIngredient(ctx, id, solo ? 0 : px, solo ? 0 : py, size, 'ready');
   }
@@ -65,4 +53,18 @@ export function drawDish(ctx, layers, x, y, scale = 1, color = '#80bfa7', shape 
     for (const [dx, dy] of [[-13, 3], [4, -10], [10, 5], [-17, 9], [21, -5]]) oval(ctx, dx, dy, 1.4, .85, '#ffedb9');
   }
   ctx.restore();
+}
+
+const toppingPositions = {
+  noodles: [-6, 0, 1.03], greens: [22, -10, .62], egg: [17, 9, .70],
+  tofu: [-20, 7, .67], shrimp: [-15, -8, .67], shrooms: [13, -6, .68],
+};
+
+function paintDishGlint(ctx, x, y, rx, ry, begin, end, color, width) {
+  ctx.beginPath();
+  ctx.ellipse(x, y, rx, ry, 0, begin, end);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.stroke();
 }

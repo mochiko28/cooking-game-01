@@ -12,9 +12,68 @@ import { bindKitchenInput } from './input-keyboard-mouse.js';
 import { renderScreen } from './screens-title-results.js';
 import { stageScreenshot } from './screenshot-scenes.js';
 
-const shell = document.querySelector('#game-shell');
-const canvas = document.querySelector('#kitchen');
-const ctx = canvas.getContext('2d');
+function renderServiceFrame(now) {
+  const dt = Math.max(0, Math.min(.05, (now - last) / 1000));
+  last = now;
+  if (state.screen === 'play' && !state.staged) updateShift(state, dt, input.read());
+  if (paintedScreen !== state.screen) {
+    renderScreen(screen, state);
+    paintedScreen = state.screen;
+    buttons.hidden = state.screen !== 'play' || state.shot === 'rush';
+    routeButton.setAttribute('aria-pressed', String(state.showRoute));
+  }
+  if (state.shot === 'rush') drawRushView(kitchenContext, state);
+  else drawKitchen(kitchenContext, state);
+  drawServiceHud(kitchenContext, state);
+  requestAnimationFrame(renderServiceFrame);
+}
+
+function showServiceScreen(next) {
+  state.screen = next;
+  state.target = null;
+  state.mouseChop = false;
+  input.clear();
+}
+
+function handleServiceCommand(action) {
+  audio.unlock();
+  if (action === 'start') {
+    state = newShift();
+    state.notice = `Start ${recipes[0].name} by pouring broth at the plating counter.`;
+    state.noticeUntil = 7;
+    showServiceScreen('play');
+  }
+  if (action === 'recipes') {
+    if (state.screen === 'recipes') showServiceScreen(previousScreen);
+    else {
+      previousScreen = state.screen;
+      showServiceScreen('recipes');
+    }
+  }
+  if (action === 'pause') {
+    if (state.screen === 'play') showServiceScreen('pause');
+    else if (state.screen === 'pause') showServiceScreen('play');
+  }
+  if (action === 'close') showServiceScreen(state.screen === 'recipes' ? previousScreen : 'play');
+  if (action === 'route') {
+    state.showRoute = !state.showRoute;
+    routeButton.setAttribute('aria-pressed', String(state.showRoute));
+  }
+  if (action === 'sound') {
+    const muted = audio.toggle();
+    soundButton.setAttribute('aria-pressed', String(muted));
+    soundButton.innerHTML = `Sound ${muted ? 'off' : 'on'} <kbd>M</kbd>`;
+  }
+  if (document.activeElement instanceof HTMLButtonElement) document.activeElement.blur();
+}
+
+function resizeStage() {
+  gameShell.style.setProperty('--stage-scale', Math.min(innerWidth / 1280, innerHeight / 800));
+}
+
+const gameShell = document.querySelector('#game-shell');
+const kitchenCanvas = document.querySelector('#kitchen');
+const kitchenContext = kitchenCanvas.getContext('2d');
 const screen = document.querySelector('#screen');
 const announcement = document.querySelector('#announcement');
 const buttons = document.querySelector('#service-buttons');
@@ -29,59 +88,20 @@ let previousScreen = 'title';
 let paintedScreen;
 stageScreenshot(state, query.get('shot'));
 
-function changeScreen(next) {
-  state.screen = next;
-  state.target = null;
-  state.mouseChop = false;
-  input.clear();
-}
-
-function command(action) {
-  audio.unlock();
-  if (action === 'start') {
-    state = newShift();
-    state.notice = `Start ${recipes[0].name} by pouring broth at the plating counter.`;
-    state.noticeUntil = 7;
-    changeScreen('play');
-  }
-  if (action === 'recipes') {
-    if (state.screen === 'recipes') changeScreen(previousScreen);
-    else {
-      previousScreen = state.screen;
-      changeScreen('recipes');
-    }
-  }
-  if (action === 'pause') {
-    if (state.screen === 'play') changeScreen('pause');
-    else if (state.screen === 'pause') changeScreen('play');
-  }
-  if (action === 'close') changeScreen(state.screen === 'recipes' ? previousScreen : 'play');
-  if (action === 'route') {
-    state.showRoute = !state.showRoute;
-    routeButton.setAttribute('aria-pressed', String(state.showRoute));
-  }
-  if (action === 'sound') {
-    const muted = audio.toggle();
-    soundButton.setAttribute('aria-pressed', String(muted));
-    soundButton.innerHTML = `Sound ${muted ? 'off' : 'on'} <kbd>M</kbd>`;
-  }
-  if (document.activeElement instanceof HTMLButtonElement) document.activeElement.blur();
-}
-
-const input = bindKitchenInput(canvas, {
+const input = bindKitchenInput(kitchenCanvas, {
   key(code) {
-    if (code === 'KeyT' && state.screen === 'play') command('route');
+    if (code === 'KeyT' && state.screen === 'play') handleServiceCommand('route');
     if (code === 'KeyQ' && state.screen === 'play') {
       focusNextTicket(state);
       const ticket = focusedTicket(state);
       if (ticket) announcement.textContent = `Focused ${ticket.recipe.name}.`;
     }
-    if (code === 'KeyR') command('recipes');
-    if (code === 'KeyP') command('pause');
-    if (code === 'KeyM') command('sound');
-    if (code === 'Escape') command(state.screen === 'recipes' ? 'close' : 'pause');
+    if (code === 'KeyR') handleServiceCommand('recipes');
+    if (code === 'KeyP') handleServiceCommand('pause');
+    if (code === 'KeyM') handleServiceCommand('sound');
+    if (code === 'Escape') handleServiceCommand(state.screen === 'recipes' ? 'close' : 'pause');
     if (['Enter', 'Space'].includes(code) && ['title', 'results'].includes(state.screen)) {
-      command('start');
+      handleServiceCommand('start');
       return;
     }
     if (['KeyE', 'Space'].includes(code) && state.screen === 'play') {
@@ -107,43 +127,25 @@ const input = bindKitchenInput(canvas, {
     }
   },
   hover(station, x, y) {
-    canvas.style.cursor = !state.staged && state.screen === 'play' && (station || ticketAt(state, x, y)) ? 'pointer' : '';
+    kitchenCanvas.style.cursor = !state.staged && state.screen === 'play' && (station || ticketAt(state, x, y)) ? 'pointer' : '';
     if (!state.staged) state.hover = station;
   },
 });
 
 screen.addEventListener('click', event => {
   const action = event.target.closest('button')?.dataset.command;
-  if (action) command(action);
+  if (action) handleServiceCommand(action);
 });
-buttons.querySelector('#book-button').onclick = () => command('recipes');
-buttons.querySelector('#pause-button').onclick = () => command('pause');
-routeButton.onclick = () => command('route');
-soundButton.onclick = () => command('sound');
+buttons.querySelector('#book-button').onclick = () => handleServiceCommand('recipes');
+buttons.querySelector('#pause-button').onclick = () => handleServiceCommand('pause');
+routeButton.onclick = () => handleServiceCommand('route');
+soundButton.onclick = () => handleServiceCommand('sound');
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && state.screen === 'play' && !state.staged) changeScreen('pause');
+  if (document.hidden && state.screen === 'play' && !state.staged) showServiceScreen('pause');
 });
 
-function resizeStage() {
-  shell.style.setProperty('--stage-scale', Math.min(innerWidth / 1280, innerHeight / 800));
-}
 resizeStage();
 window.addEventListener('resize', resizeStage);
 
 let last = performance.now();
-function frame(now) {
-  const dt = Math.max(0, Math.min(.05, (now - last) / 1000));
-  last = now;
-  if (state.screen === 'play' && !state.staged) updateShift(state, dt, input.read());
-  if (paintedScreen !== state.screen) {
-    renderScreen(screen, state);
-    paintedScreen = state.screen;
-    buttons.hidden = state.screen !== 'play' || state.shot === 'rush';
-    routeButton.setAttribute('aria-pressed', String(state.showRoute));
-  }
-  if (state.shot === 'rush') drawRushView(ctx, state);
-  else drawKitchen(ctx, state);
-  drawServiceHud(ctx, state);
-  requestAnimationFrame(frame);
-}
-frame(last);
+renderServiceFrame(last);
