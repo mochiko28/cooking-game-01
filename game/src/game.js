@@ -172,7 +172,7 @@ function createShift(seed, sound, announce) {
     cook: { x: 198, y: 419, facing: 1, moving: false, hand: null },
     board: { food: null, cuts: 0, mark: -10 },
     pots: Array.from({ length: 2 }, () => ({ food: null, age: 0 })),
-    layers: [], ready: null, queuedPlate: null, platePop: -10, particles: [], target: null, hover: null,
+    layers: [], ready: null, queuedPlate: null, platePop: -10, servePop: null, particles: [], target: null, hover: null,
     mouseChop: false, notice: '', noticeUntil: 0, staged: false,
     random: randomSequence(seed), visualRandom: randomSequence(seed + 89), sound, announce,
   };

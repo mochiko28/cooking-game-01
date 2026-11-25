@@ -351,3 +351,25 @@ function drawSteam(ctx, x, y, elapsed, burnt = false, bold = false) {
     ctx.restore();
   }
 }
+
+export function drawServePop(ctx, { tip, multiplier }, age, x, y, scale = 1) {
+  if (age >= 1.2) return;
+  const lift = 38 * (1 - Math.exp(-10 * age));
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  const opacity = Math.min(1, (1.2 - age) / .28);
+  ctx.globalAlpha = opacity;
+  for (const direction of [-1, 1]) {
+    stroke(ctx, '#ffcf75', 4, [[direction * 61, -11], [direction * 81, -36 - lift * .35]]);
+    stroke(ctx, '#fff0b7', 3, [[direction * 82, -5], [direction * 104, -20 - lift * .25]]);
+    drawSparkle(ctx, direction * 103, -42 - lift * .5, 8, opacity);
+  }
+  ctx.translate(0, -57 - lift);
+  ctx.rotate(-.06);
+  panel(ctx, -109, -43, 218, 87, 13, '#142f27', '#ffd078', 4);
+  label(ctx, 'SERVED!', 0, -21, 43, '#fff6d4', { align: 'center', weight: 950 });
+  label(ctx, multiplier > 1 ? `+${tip} ×${multiplier}` : `+${tip}`,
+    0, 20, 43, '#ffd078', { align: 'center', weight: 950 });
+  ctx.restore();
+}

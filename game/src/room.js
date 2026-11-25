@@ -1,6 +1,6 @@
 // Draws the kitchen floor, its fixtures, and the cook’s route.
 import { coverIsland, floorBounds, ingredients, nearbyStation, pantry } from './stations.js';
-import { drawPass, drawPlating, drawStove, drawWorkstations } from './worktops.js';
+import { drawPass, drawPlating, drawServePop, drawStove, drawWorkstations } from './worktops.js';
 import { drawIngredient, drawKitchenSign, drawWoodGrain, label, oval, palette, panel, stroke } from './paint.js';
 
 export function drawKitchen(ctx, state, route) {
@@ -20,6 +20,9 @@ export function drawKitchen(ctx, state, route) {
   ctx.globalAlpha = 1;
   if (!cover) drawServiceFooter(ctx, state);
   else if (route) drawCoverRouteChoices(ctx, route.choices);
+  if (state.screen === 'play' && state.servePop) {
+    drawServePop(ctx, state.servePop, state.elapsed - state.servePop.at, 1039, 656);
+  }
 }
 
 function drawStationFocus(ctx, state) {

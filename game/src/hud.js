@@ -14,8 +14,10 @@ export function drawServiceHud(ctx, state) {
   label(ctx, 'NIGHT MARKET KITCHEN', 108, 71, 15, '#b9ceba');
 
   const rushCover = state.shot === 'cover';
+  const live = !state.staged && state.screen === 'play';
   panel(ctx, 564, 15, 223, 69, 9, rushCover ? '#5c3428' : '#213e33', rushCover ? '#d88f52' : '#49675a');
-  label(ctx, rushCover ? `${waveName} ${waveIndex + 1}/${serviceWaves.length}` : waveName, 675, 36, 24, wave.color, { align: 'center' });
+  if (live && wave === serviceWaves.at(-1)) drawLastCall(ctx, waveName, 675, 36, 24, state.elapsed);
+  else label(ctx, rushCover ? `${waveName} ${waveIndex + 1}/${serviceWaves.length}` : waveName, 675, 36, 24, wave.color, { align: 'center' });
   if (rushCover) {
     const level = 4 + state.coverMotion / 1.8;
     for (let i = 0; i < 6; i++) {
@@ -32,7 +34,7 @@ export function drawServiceHud(ctx, state) {
     }
   }
 
-  drawShiftTimer(ctx, state.elapsed, rushCover ? state.coverMotion : null);
+  drawShiftTimer(ctx, state.elapsed, rushCover ? state.coverMotion : null, live);
 
   panel(ctx, 1036, 15, 224, 69, 9, '#213e33', '#49675a');
   oval(ctx, 1058, 37, 11, 11, '#eeb667', '#ffdb8a');
@@ -45,7 +47,7 @@ export function drawServiceHud(ctx, state) {
   drawOrderBoard(ctx, state);
 }
 
-function drawShiftTimer(ctx, elapsed, coverMotion) {
+function drawShiftTimer(ctx, elapsed, coverMotion, live) {
   const cover = coverMotion !== null;
   elapsed += coverMotion ?? 0;
   const remaining = Math.max(0, shiftLength - elapsed);
@@ -77,7 +79,8 @@ function drawShiftTimer(ctx, elapsed, coverMotion) {
   stroke(ctx, color, 2.5, [[x, y], [x + Math.cos(angle) * 14, y + Math.sin(angle) * 14]]);
   oval(ctx, x, y, 2.7, 2.7, color);
   label(ctx, 'SHIFT TIMER', cover ? 880 : 945, 29, cover ? 19 : 17, color, { align: cover ? 'left' : 'center' });
-  label(ctx, readShiftClock(elapsed), cover ? 873 : 945, 59, cover ? 37 : 44, '#fff0d7', { align: cover ? 'left' : 'center', face: 'monospace' });
+  if (live && urgent) drawUrgentClock(ctx, elapsed, elapsed, 945, 58, .53);
+  else label(ctx, readShiftClock(elapsed), cover ? 873 : 945, 59, cover ? 37 : 44, '#fff0d7', { align: cover ? 'left' : 'center', face: 'monospace' });
   if (cover) {
     ctx.save();
     ctx.globalAlpha = .78 + pulse * .22;
@@ -234,3 +237,37 @@ const ticketSpacing = 304;
 const ticketWidth = 292;
 const ticketHeight = 79;
 const ticketDishX = 38;
+
+export function drawLastCall(ctx, text, x, y, size, motion) {
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(size / 80, size / 80);
+  const shake = Math.sin(motion * 27);
+  for (const direction of [-1, 1]) {
+    ctx.save();
+    ctx.scale(direction, 1);
+    ctx.translate(233 + shake * 4, 0);
+    stroke(ctx, '#ffd18d', 6, [[16, -37], [2, -18]]);
+    stroke(ctx, '#fff1c6', 7, [[29, -17], [14, 2]]);
+    stroke(ctx, '#ffd18d', 6, [[26, 14], [13, 30]]);
+    ctx.restore();
+  }
+  label(ctx, text, shake * 4, 0, 80, '#fff0d5', { align: 'center', weight: 950 });
+  ctx.restore();
+}
+
+export function drawUrgentClock(ctx, elapsed, motion, x, y, scale = 1) {
+  const pulse = .5 + .5 * Math.cos(motion * 2 * Math.PI);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, scale);
+  ctx.shadowColor = '#ff3e28';
+  ctx.shadowBlur = (12 + 18 * pulse) * scale;
+  panel(ctx, -117 - 4 * pulse, -43 - 3 * pulse, 234 + 8 * pulse, 86 + 6 * pulse,
+    23, null, '#ff5743', 5 + 2 * pulse);
+  ctx.shadowBlur = 0;
+  panel(ctx, -108, -35, 216, 70, 18, '#591d17', '#ff9a79', 3);
+  label(ctx, readShiftClock(elapsed), 0, 0, 77 + pulse * 4, '#ffe5d0',
+    { align: 'center', face: 'monospace', weight: 900 });
+  ctx.restore();
+}

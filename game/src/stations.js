@@ -197,10 +197,17 @@ const burnSeconds = 7;
 function serveReadyPlate(state) {
   if (!state.ready) return 'Finish a dish at the plating counter first.';
   const recipe = state.ready;
+  const tipsBefore = state.tips;
   const service = scoreServe(state, recipe);
   state.ready = state.queuedPlate;
   state.queuedPlate = null;
   if (!service) return `No ticket for ${recipe.name}. The dish was cleared.`;
+  state.servePop = {
+    at: state.elapsed,
+    recipe,
+    tip: (state.tips - tipsBefore) / service.sharedPrepMultiplier,
+    multiplier: service.sharedPrepMultiplier,
+  };
   state.sound('serve');
   burst(state, 1039, 656, '#ffdb79', 22);
   const details = service.bonus ? 'VIP bonus!' : state.combo > 1 ? `×${comboMultiplier(state.combo)} tips` : 'Order served!';
