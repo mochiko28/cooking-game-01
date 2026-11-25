@@ -183,35 +183,47 @@ export function drawPlating(ctx, state) {
   const largerLabels = cover || !state.staged;
   const recipe = platingRecipe(state);
   const resting = queuedPlate && !layers.length;
-  const listX = largerLabels ? 751 : 772;
-  panel(ctx, 589, 619, listX - 590, 109, 7, '#41665a', '#31493d');
-  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[597, y], [listX - 9, y]]);
-  const bounce = Math.max(0, 1 - (state.elapsed - state.platePop) * 7) * .13;
-  drawDish(ctx, resting ? queuedPlate.layers : layers, largerLabels ? 670 : 679, 659,
-    (largerLabels ? 1.6 : 1.78) + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
-  if (cover) drawFallingGreens(ctx, state.coverMotion);
   const checklist = resting ? queuedPlate : recipe;
+  const listX = largerLabels ? 750 : 772;
+  const listRight = largerLabels ? 927 : 925;
+  const matRight = largerLabels ? 742 : listX - 1;
+  panel(ctx, 589, 619, matRight - 589, 109, 7, '#41665a', '#31493d');
+  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[597, y], [matRight - 8, y]]);
+  const bounce = Math.max(0, 1 - (state.elapsed - state.platePop) * 7) * .13;
+  drawDish(ctx, resting ? queuedPlate.layers : layers, largerLabels ? 665 : 679, largerLabels ? 666 : 659,
+    (largerLabels ? 1.36 : 1.78) + bounce, checklist.color, checklist.shape);
+  if (cover) drawFallingGreens(ctx, state.coverMotion);
+  const fourRows = largerLabels && checklist.layers.length === 4;
+  const rowHeight = largerLabels ? (fourRows ? 22 : 25) : 19;
+  const firstRow = fourRows ? 652 : 653;
+  if (largerLabels) {
+    const cardBottom = firstRow + (checklist.layers.length - .5) * rowHeight + 5;
+    panel(ctx, listX, 616, listRight - listX, cardBottom - 616, 7, '#f4ddb4', '#a57850');
+  }
   drawKitchenSign(ctx, resting ? 'ON TRAY' : layers.length ? 'DISH IN PROGRESS' : 'NEXT DISH',
-    listX, 618, 925 - listX, 22, { size: largerLabels ? 20 : 14 });
-  const rowHeight = largerLabels ? 23 : 19;
+    listX, largerLabels ? 616 : 618, listRight - listX, largerLabels ? 25 : 22,
+    { size: largerLabels ? 20 : 14 });
   checklist.layers.forEach((id, i) => {
     const done = resting || i < layers.length;
     const next = !resting && i === layers.length;
-    const rowY = 653 + i * rowHeight;
-    if (next) panel(ctx, listX + 1, rowY - Math.floor(rowHeight / 2), 923 - listX, rowHeight, 4, '#ffe5ae');
-    label(ctx, done ? '✓' : next ? '›' : '·', listX + (largerLabels ? 7 : 9), rowY,
+    const rowY = firstRow + i * rowHeight;
+    const rowX = listX + (largerLabels ? 4 : 1);
+    if (next) panel(ctx, rowX, rowY - Math.floor(rowHeight / 2),
+      (largerLabels ? 923 : 924) - rowX, rowHeight, 4, largerLabels ? '#f7c879' : '#ffe5ae');
+    label(ctx, done ? '✓' : next ? '›' : '·', listX + (largerLabels ? 6 : 9), rowY,
       largerLabels ? 22 : 19, done ? '#254f39' : '#6f452e');
-    label(ctx, ingredients[id].name, listX + 25, rowY, largerLabels ? 26 : 16, '#302d23',
-      { maxWidth: next ? 80 : 918 - listX - 25 });
-    if (next) label(ctx, 'NEXT', largerLabels ? 920 : 918, rowY, largerLabels ? 26 : 10, largerLabels ? '#5a3c25' : '#78502e',
+    const nameX = listX + (largerLabels ? 22 : 25);
+    label(ctx, ingredients[id].name, nameX, rowY, largerLabels ? 26 : 16, '#302d23',
+      { maxWidth: next ? 80 : 918 - nameX });
+    if (next) label(ctx, 'NEXT', largerLabels ? 921 : 918, rowY, largerLabels ? 26 : 10, largerLabels ? '#5a3c25' : '#78502e',
       { align: 'right', maxWidth: 59 });
   });
 }
 
 function drawFallingGreens(ctx, motion) {
   const progress = ((motion + .03) % .7) / .7;
-  const x = 743 - progress * 35;
-  const y = 626 + progress * 20;
+  const x = 701 - progress * 21;
+  const y = 628 + progress * 21;
   stroke(ctx, '#fff2b7', 4, [[x + 16, y - 6], [x + 27, y - 16]]);
   stroke(ctx, '#d8eaaa', 3, [[x + 27, y + 2], [x + 35, y - 8]]);
   drawIngredient(ctx, 'greens', x, y, .94, 'chopped');
