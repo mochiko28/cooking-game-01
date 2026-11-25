@@ -129,12 +129,13 @@ function floorDrain(ctx, x, y) {
 let kitchenBackdrop;
 
 function drawFurniture(ctx, state) {
+  const cover = state.shot === 'cover';
   drawCounterSign(ctx);
-  for (const crate of pantry) drawCrate(ctx, crate);
+  for (const crate of pantry) drawCrate(ctx, crate, cover);
   for (const station of worktops) drawWorktop(ctx, station);
-  drawSink(ctx);
+  drawSink(ctx, cover);
   drawChopBoard(ctx, state);
-  if (state.shot === 'cover') drawPrepIsland(ctx);
+  if (cover) drawPrepIsland(ctx);
 }
 
 function drawPrepIsland(ctx) {
@@ -155,7 +156,7 @@ function drawPrepIsland(ctx) {
   }
 }
 
-function drawCrate(ctx, crate) {
+function drawCrate(ctx, crate, cover) {
   const { id, x, y, w, h } = crate;
   panel(ctx, x - 1, y + 8, w + 2, h, 8, '#102522b0');
   panel(ctx, x, y, w, h, 7, '#a66c43', '#503e2d');
@@ -163,7 +164,7 @@ function drawCrate(ctx, crate) {
   panel(ctx, x + 10, y + 8, w - 20, 45, 4, '#956848');
   for (let i = 0; i < 3; i++) stroke(ctx, '#b38158', 1, [[x + 12, y + 17 + 14 * i], [x + w - 12, y + 17 + 14 * i]]);
   drawCrateContents(ctx, id, x + w / 2, y + 30);
-  drawCrateLabel(ctx, crate, ingredients[id]);
+  drawCrateLabel(ctx, crate, ingredients[id], cover);
 }
 
 function drawCrateContents(ctx, id, x, y) {
@@ -258,7 +259,7 @@ function drawChopBoard(ctx, state) {
   if (cover || sinceCut < .58) drawChopPop(ctx, swing, state.board.cuts, cover);
   meter(ctx, 62, 703, 204, 6, state.board.cuts / 4, '#335a45', '#9e6c48');
   const status = state.board.cuts === 4 ? 'PICK UP' : state.board.food ? `${state.board.cuts} / 4 CUTS` : 'HOLD TO CHOP';
-  label(ctx, status, 164, 721, 16, '#3b2b20', { align: 'center' });
+  label(ctx, status, 164, 721, cover ? 18 : 16, '#3b2b20', { align: 'center' });
 }
 
 function drawChopPop(ctx, age, cuts, cover) {
@@ -271,23 +272,23 @@ function drawChopPop(ctx, age, cuts, cover) {
   ctx.restore();
 }
 
-function drawSink(ctx) {
+function drawSink(ctx, cover) {
   drawStationShadow(ctx, sink.x, sink.y, sink.w, sink.h);
   panel(ctx, sink.x, sink.y, sink.w, sink.h, 7, '#90afa3', '#c4c8a4');
   panel(ctx, sink.x + 7, sink.y + 13, 44, 47, 8, '#496e65', '#d4d9b9');
   stroke(ctx, '#d4d7b6', 4, [[1216, 428], [1216, 439], [1207, 439], [1207, 449]]);
   oval(ctx, 1210, 465, 5, 5, '#b0c9b5');
-  drawKitchenSign(ctx, 'Sink', 1186, 481, 46, 22, { size: 14 });
+  drawKitchenSign(ctx, 'Sink', 1186, 481, 46, 22, { size: cover ? 16 : 14 });
 }
 
 function drawCounterSign(ctx) {
   drawKitchenSign(ctx, 'COUNTER INGREDIENTS', 51, 216, 302, 29);
 }
 
-function drawCrateLabel(ctx, crate, data) {
+function drawCrateLabel(ctx, crate, data, cover) {
   const { x, y, w } = crate;
   const prep = { pour: 'POUR', cook: 'COOK', chop: 'CHOP', both: 'CHOP + COOK' }[data.route];
-  drawKitchenSign(ctx, data.name, x + 6, y + 53, w - 12, 35, { size: 18, prep });
+  drawKitchenSign(ctx, data.name, x + 6, y + 53, w - 12, 35, { size: cover ? 20 : 18, prep, prepSize: cover ? 13 : 11 });
 }
 
 function drawStationSign(ctx, station) {
@@ -295,13 +296,13 @@ function drawStationSign(ctx, station) {
   drawKitchenSign(ctx, station.label, x + 7, y + 5, undefined, 29);
 }
 
-function drawKitchenSign(ctx, name, x, y, width, height, { size = 22, prep } = {}) {
+function drawKitchenSign(ctx, name, x, y, width, height, { size = 22, prep, prepSize = 11 } = {}) {
   const title = name.toUpperCase();
   ctx.font = `800 ${size}px system-ui`;
   const w = width ?? Math.ceil(ctx.measureText(title).width) + 24;
   panel(ctx, x, y, w, height, height / 2, '#222d27', '#ba9065', 1);
   label(ctx, title, x + w / 2, y + (prep ? 11 : height / 2), size, palette.light, { align: 'center' });
-  if (prep) label(ctx, prep, x + w / 2, y + 27, 11, '#e8bf88', { align: 'center' });
+  if (prep) label(ctx, prep, x + w / 2, y + 27, prepSize, '#e8bf88', { align: 'center' });
 }
 
 function drawServiceFooter(ctx, state) {
@@ -326,7 +327,7 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = 
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   panel(ctx, -62, -42, 124, 73, 6, '#263630', warning || burning ? '#ff765b' : '#8c9b85', 2);
-  label(ctx, String(index + 1), -49, -29, 14, '#f4deb3', { align: 'center' });
+  label(ctx, String(index + 1), -49, -29, coverMotion === null ? 14 : 16, '#f4deb3', { align: 'center' });
   oval(ctx, 0, 3, 51, 25, '#142924', '#567267');
   oval(ctx, 0, 6, 43, 20, hot ? '#bd5e37' : '#425750');
   oval(ctx, 0, 6, 36, 16, null, hot ? '#f6aa5e' : '#73877b', 2.5);
@@ -354,7 +355,8 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = 
   meter(ctx, -60, 36, 120, 6, progress, warning ? '#ff785e' : colors[phase], '#6d5944');
   panel(ctx, -62, 46, 124, 23, 5, warning || burning ? '#a53125' : '#263630');
   const status = burning ? 'BURNING' : warning ? `BURN ${Math.ceil(countdown)}s` : words[phase];
-  label(ctx, status, 0, 58, burning ? 19 : 16, warning || burning ? '#fff0cf' : colors[phase], { align: 'center' });
+  const statusSize = coverMotion === null ? 16 : burning ? 22 : 18;
+  label(ctx, status, 0, 58, statusSize, warning || burning ? '#fff0cf' : colors[phase], { align: 'center' });
   ctx.restore();
 }
 
@@ -372,6 +374,7 @@ function drawSizzle(ctx, motion) {
 
 function drawPlating(ctx, state) {
   const { layers, queuedPlate } = state;
+  const cover = state.shot === 'cover';
   const choices = matchingRecipes(layers);
   const focus = focusedTicket(state)?.recipe;
   const recipe = choices.includes(focus) ? focus : choices.find(option => state.orders.some(ticket => ticket.recipe === option)) ?? choices[0];
@@ -382,16 +385,16 @@ function drawPlating(ctx, state) {
   drawDish(ctx, resting ? queuedPlate.layers : layers, 679, 659, 1.78 + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
   const checklist = resting ? queuedPlate : recipe;
   drawKitchenSign(ctx, resting ? 'ON TRAY' : layers.length ? 'DISH IN PROGRESS' : 'NEXT DISH',
-    772, 618, 153, 22, { size: 14 });
+    772, 618, 153, 22, { size: cover ? 15 : 14 });
   checklist.layers.forEach((id, i) => {
     const done = resting || i < layers.length;
     const next = !resting && i === layers.length;
     if (next) panel(ctx, 773, 644 + i * 19, 151, 19, 4, '#ffe5ae');
     label(ctx, done ? '✓' : next ? '›' : '·', 781, 653 + i * 19, 19, done ? '#254f39' : '#6f452e');
-    label(ctx, ingredients[id].name, 797, 653 + i * 19, 16, '#302d23');
-    if (next) label(ctx, 'NEXT', 918, 653 + i * 19, 10, '#78502e', { align: 'right' });
+    label(ctx, ingredients[id].name, 797, 653 + i * 19, cover ? 18 : 16, '#302d23');
+    if (next) label(ctx, 'NEXT', 918, 653 + i * 19, cover ? 12 : 10, '#78502e', { align: 'right' });
   });
-  if (state.shot === 'cover') drawFallingGreens(ctx, state.coverMotion);
+  if (cover) drawFallingGreens(ctx, state.coverMotion);
 }
 
 function drawFallingGreens(ctx, motion) {
@@ -408,7 +411,11 @@ function drawFallingGreens(ctx, motion) {
 
 function drawPass(ctx, state) {
   const cover = state.shot === 'cover';
-  if (cover) drawWaitingCustomer(ctx, state.coverMotion);
+  if (cover) {
+    const vip = state.orders.find(ticket => ticket.recipe.id === 'gold');
+    if (vip) drawQueuedCustomer(ctx, Math.ceil(vip.left - state.coverMotion * 4), state.coverMotion);
+    drawWaitingCustomer(ctx, state.coverMotion);
+  }
   panel(ctx, 954, 620, 274, 104, 7, '#6e3f31', '#a9754f');
   for (let y = 627; y < 721; y += 15) stroke(ctx, '#cc88534d', 1.5, [[962, y], [1220, y]]);
   oval(ctx, 1039, 667, 78, 44, null, '#b37e56');
@@ -425,7 +432,7 @@ function drawPass(ctx, state) {
   drawReadySparkles(ctx, 1044, 665, steamTime);
   if (cover) drawReadyRing(ctx, state.coverMotion);
   drawKitchenSign(ctx, 'Ready', 1138, 642, 82, 36, { size: 22 });
-  label(ctx, state.ready.name, 1179, 698, 16, '#ffe5b7', { align: 'center' });
+  label(ctx, state.ready.name, 1179, 698, cover ? 18 : 16, '#ffe5b7', { align: 'center' });
 }
 
 function drawReadySteam(ctx, motion) {
@@ -446,6 +453,22 @@ function drawReadySteam(ctx, motion) {
   ctx.restore();
 }
 
+function drawQueuedCustomer(ctx, seconds, motion) {
+  ctx.save();
+  ctx.translate(0, Math.sin(motion * 6) * 3);
+  oval(ctx, 1152, 552, 36, 12, '#132c2880');
+  panel(ctx, 1121, 479, 58, 76, 21, '#3a303b', '#c98f69', 3);
+  stroke(ctx, '#bb8a72', 3, [[1167, 499], [1156, 522], [1137, 526]]);
+  oval(ctx, 1150, 465, 23, 25, '#31283a', '#c98f69', 3);
+  oval(ctx, 1168, 449, 10, 10, '#31283a', '#c98f69', 2);
+  oval(ctx, 1130, 469, 5, 7, '#be8462');
+
+  panel(ctx, 1109, 399, 66, 32, 10, '#7e352d', '#ffd08a', 2);
+  stroke(ctx, '#ffd08a', 2, [[1141, 431], [1149, 439], [1150, 431]]);
+  label(ctx, `${seconds} s`, 1142, 415, 23, '#fff0ce', { align: 'center' });
+  ctx.restore();
+}
+
 function drawWaitingCustomer(ctx, motion) {
   oval(ctx, 1085, 573, 57, 16, '#132c28a0');
   panel(ctx, 1044, 510, 80, 75, 27, '#202e3c', '#e2a36a', 3);
@@ -455,10 +478,10 @@ function drawWaitingCustomer(ctx, motion) {
   stroke(ctx, '#202e3c', 19, [[1057, 531], [1029, 558], [1019, 577]]);
   panel(ctx, 1007, 562, 21, 26, 8, '#d39a6f', '#f6c48f', 2);
   stroke(ctx, '#a65f42', 2, [[1014, 570], [1014, 580]]);
-  const y = 503 - Math.sin(motion * 3) * 8;
-  oval(ctx, 1150, y, 24, 24, '#983d31', '#ffd28d', 3);
-  label(ctx, '♥', 1150, y + 1, 29, '#fff0ce', { align: 'center' });
-  drawSparkle(ctx, 1179, y - 12, 6, .9);
+  const y = 461 - Math.sin(motion * 3) * 8;
+  oval(ctx, 1045, y, 22, 22, '#983d31', '#ffd28d', 3);
+  label(ctx, '♥', 1045, y + 1, 27, '#fff0ce', { align: 'center' });
+  drawSparkle(ctx, 1072, y - 12, 6, .9);
 }
 
 function drawReadyRing(ctx, motion) {

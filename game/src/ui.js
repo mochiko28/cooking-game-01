@@ -103,11 +103,12 @@ function drawOrderBoard(ctx, state) {
   panel(ctx, 20, 92, 1240, 112, 12, '#203930', '#725d47', 2);
   label(ctx, 'ORDER BOARD', 37, 106, 21, palette.light);
   const focus = focusedTicket(state);
-  if (focus && state.showRoute) {
+  const cover = state.shot === 'cover';
+  if (cover) drawCoverDecision(ctx);
+  else if (focus && state.showRoute) {
     oval(ctx, 218, 106, 4, 4, palette.gold);
     label(ctx, `NEXT ROUTE  /  ${focus.recipe.name.toUpperCase()}`, 230, 106, 15, palette.gold);
   }
-  const cover = state.shot === 'cover';
   label(ctx, `${state.orders.length} / ${ticketCapacity} TICKETS`, cover ? 1092 : 1242, 106, 16, '#ced8bd', { align: 'right' });
   for (let i = 0; i < ticketCapacity; i++) {
     const x = ticketRailX + ticketSpacing * i;
@@ -118,9 +119,17 @@ function drawOrderBoard(ctx, state) {
   }
 }
 
+function drawCoverDecision(ctx) {
+  panel(ctx, 225, 93, 233, 24, 6, '#dcebb9');
+  label(ctx, 'Jade Noodles 6 s', 342, 105, 23, '#20392a', { align: 'center' });
+  label(ctx, '‹ NEXT? ›', 522, 105, 22, palette.light, { align: 'center' });
+  panel(ctx, 583, 93, 305, 24, 6, '#ffcf8a');
+  label(ctx, 'Golden Egg · VIP tip', 735, 105, 23, '#482b20', { align: 'center' });
+}
+
 function drawIncoming(ctx, ticket, x, motion) {
-  const remaining = 1 - Math.min(1, motion / .5);
-  const offset = Math.round(320 * remaining ** 3);
+  const remaining = 1 - Math.min(1, motion / .56);
+  const offset = Math.round((ticketWidth + 4) * remaining ** 3);
   panel(ctx, x, ticketY, ticketWidth, ticketHeight, 7, '#19322a', '#416253');
   ctx.save();
   ctx.beginPath();
@@ -151,9 +160,11 @@ function drawTicket(ctx, ticket, x, focused, motion = null) {
   panel(ctx, x + 7, y + 7, 63, 55, 6, ticket.recipe.color);
   drawDish(ctx, ticket.recipe.layers, x + 38, y + 34, .51, ticket.recipe.color, ticket.recipe.shape);
   label(ctx, ticket.recipe.name, x + 79, y + 20, motion === null ? 22 : vip ? 24 : 26, palette.ink);
+  const iconSpacing = motion === null ? 38 : 41;
   ticket.recipe.layers.forEach((id, index) => {
-    if (index) label(ctx, '›', x + 76 + index * 38, y + 47, 17, '#8d5c40');
-    drawIngredient(ctx, id, x + 96 + index * 38, y + 46, .46, 'ready');
+    const iconX = x + 96 + index * iconSpacing;
+    if (index) label(ctx, '›', iconX - 20, y + 47, motion === null ? 17 : 20, '#8d5c40');
+    drawIngredient(ctx, id, iconX, y + 46, motion === null ? .46 : .53, 'ready');
   });
   const barWidth = ticketWidth - 14;
   const fill = motion === null ? patienceColor(progress) : urgent ? (flash ? '#ff4b3d' : '#ff6254')
@@ -170,10 +181,11 @@ function drawTicket(ctx, ticket, x, focused, motion = null) {
     label(ctx, '!', markerX, y + 49, 22, '#fff0d7', { align: 'center' });
   }
   if (vip) {
-    const time = Math.ceil(ticket.vipLeft);
-    panel(ctx, x + 229, y + 7, 56, 54, 5, activeBonus ? '#963b2c' : '#6c5a4d');
-    label(ctx, 'VIP', x + 257, y + 23, 17, palette.light, { align: 'center' });
-    label(ctx, activeBonus ? `${time}s` : '—', x + 257, y + 45, 18, '#ffd28e', { align: 'center' });
+    const time = Math.ceil(ticket.vipLeft - (motion ?? 0));
+    const background = activeBonus ? (flash ? '#a83025' : '#963b2c') : '#6c5a4d';
+    panel(ctx, x + 229, y + 7, 56, 54, 5, background);
+    label(ctx, 'VIP', x + 257, y + 23, motion === null ? 17 : 19, palette.light, { align: 'center' });
+    label(ctx, activeBonus ? `${time}s` : '—', x + 257, y + 45, motion === null ? 18 : 21, '#ffd28e', { align: 'center' });
     if (activeBonus) meter(ctx, x + 233, y + 55, 48, 3, ticket.vipLeft / vipSeconds, '#ffd28e', '#65342b');
   } else if (focused) {
     label(ctx, '◆', x + 275, y + 18, 17, '#88612c', { align: 'center' });
