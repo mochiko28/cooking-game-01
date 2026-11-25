@@ -1,42 +1,7 @@
-// Compares valid station sequences for the next layer of the focused ticket.
-import { focusedTicket } from './order-board.js';
-import { burners, coverIsland, pantry, sink, worktops } from './kitchen-layout.js';
-import { needsChopping, needsCooking, pickIngredient } from './ingredients.js';
-import { stovePhase } from './cooking-stove.js';
-import { cookSpeed } from './player-cook.js';
-
-export function routeForTicket(state, ticket = focusedTicket(state)) {
-  return chooseFastestRoute(state.cook, ticketRoutes(state, ticket));
-}
-
-export function coverRoutePlan() {
-  // The cook picks up greens, checks the burning pot, then plates the garnish.
-  const stops = [chop, burners[1], plate];
-  const { x, y, w } = coverIsland;
-  const detour = [
-    { standX: x - 28, standY: y - 23 },
-    { standX: x + w + 31, standY: y - 23 },
-  ];
-  // Compare the complete walks at the cover's presentation pace.
-  const start = { x: chop.standX, y: chop.standY, speed: 105 };
-  return {
-    stops,
-    detour,
-    fastest: Math.ceil(estimateRouteSeconds(start, stops)),
-    slower: Math.ceil(estimateRouteSeconds(start, [chop, burners[1], ...detour, plate])),
-  };
-}
-
-export function estimateRouteSeconds(cook, stations) {
-  let { x, y } = cook;
-  let distance = 0;
-  for (const { standX, standY } of stations) {
-    distance += Math.hypot(standX - x, standY - y);
-    x = standX;
-    y = standY;
-  }
-  return distance / (cook.speed ?? cookSpeed);
-}
+// Chooses the shortest valid route for the focused ticket.
+import { focusedTicket } from './orders.js';
+import { burners, needsChopping, needsCooking, pantry, pickIngredient, sink, stovePhase, worktops } from './stations.js';
+import { cookSpeed } from './cook.js';
 
 export function chooseFastestRoute(cook, routes) {
   let best = [];
@@ -49,6 +14,21 @@ export function chooseFastestRoute(cook, routes) {
     }
   }
   return best;
+}
+
+export function routeForTicket(state, ticket = focusedTicket(state)) {
+  return chooseFastestRoute(state.cook, ticketRoutes(state, ticket));
+}
+
+export function estimateRouteSeconds(cook, stations) {
+  let { x, y } = cook;
+  let distance = 0;
+  for (const { standX, standY } of stations) {
+    distance += Math.hypot(standX - x, standY - y);
+    x = standX;
+    y = standY;
+  }
+  return distance / (cook.speed ?? cookSpeed);
 }
 
 function ticketRoutes(state, ticket) {

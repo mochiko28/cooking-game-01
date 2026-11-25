@@ -1,11 +1,108 @@
-// Frames the last-call order rail and the two burners for the rush showcase.
-import { label, meter, oval, panel, palette } from './draw-primitives.js';
-import { drawBurner } from './draw-burners.js';
-import { drawDish } from './draw-dish.js';
-import { drawRoom } from './draw-floor-and-walls.js';
-import { readShiftClock } from './shift-timer.js';
-import { serviceWave, serviceWaves } from './service-waves.js';
-import { simmerSeconds } from './cooking-stove.js';
+// Stages the four screenshot scenes and draws the rush showcase.
+import { recipes, spawnOrder } from './orders.js';
+import { readShiftClock, serviceWave, serviceWaves, shiftLength } from './shift.js';
+import { estimateRouteSeconds } from './route.js';
+import { burners, chopIngredient, coverIsland, moveParticles, simmerSeconds, worktops } from './stations.js';
+import { drawBurner, drawRoom, routePoint, routeSegment } from './kitchen.js';
+import { drawDish, label, meter, oval, palette, panel } from './paint.js';
+
+export function stageScreenshot(state, scene) {
+  if (!['cover', 'rush', 'recipes', 'results'].includes(scene)) return;
+  const [garden, tide, gold, moon, harvest, ember] = recipes;
+  state.staged = true;
+  state.shot = scene;
+  state.screen = 'play';
+  state.elapsed = 94;
+  state.orders = [];
+  state.nextTicket = 7;
+  state.coins = 238;
+  state.served = 4;
+  state.combo = 3;
+  state.layers = ['broth', 'noodles'];
+  state.ready = tide;
+  state.pots = [
+    { food: { id: 'egg', stage: 'raw' }, age: 2.8 },
+    { food: { id: 'shrimp', stage: 'raw' }, age: 9.7 },
+  ];
+  state.cook.x = 436;
+  state.cook.y = 432;
+  state.cook.facing = -1;
+
+  if (scene === 'cover') stageCover(state);
+
+  if (scene === 'rush') {
+    state.elapsed = 153;
+    state.coins = 466;
+    state.served = 7;
+    state.combo = 5;
+    state.pots[0].age = 13;
+    state.pots[0].food.id = 'shrimp';
+    state.pots[1] = { food: { id: 'noodles', stage: 'raw' }, age: 3.3 };
+    state.showRoute = false;
+  }
+
+  const rush = scene === 'rush';
+  const rail = rush ? [ember, tide, harvest, moon, gold, garden] : [garden, tide, gold, moon];
+  rail.forEach((recipe, index) => {
+    const left = (rush ? [5, 36, 12, 49, 18, 9] : [42, 49, scene === 'cover' ? 13 : 21, 57])[index];
+    spawnOrder(state, { recipe, left, patience: 64, vipLeft: index === 2 ? (rush ? 11 : 17) : undefined });
+  });
+  if (scene === 'recipes') state.screen = 'recipes';
+  if (scene === 'results') {
+    state.screen = 'results';
+    state.elapsed = shiftLength;
+    state.served = 9;
+    state.servedByWave = [2, 4, 3];
+    state.coins = 698;
+    state.tips = 302;
+    state.bestCombo = 6;
+    state.missed = 2;
+  }
+}
+
+export function coverRoutePlan() {
+  // The cook picks up greens, checks the burning pot, then plates the garnish.
+  const stops = [chop, burners[1], plate];
+  const { x, y, w } = coverIsland;
+  const detour = [
+    { standX: x - 28, standY: y - 23 },
+    { standX: x + w + 31, standY: y - 23 },
+  ];
+  // Compare the complete walks at the cover's presentation pace.
+  const start = { x: chop.standX, y: chop.standY, speed: 105 };
+  return {
+    stops,
+    detour,
+    fastest: Math.ceil(estimateRouteSeconds(start, stops)),
+    slower: Math.ceil(estimateRouteSeconds(start, [chop, burners[1], ...detour, plate])),
+  };
+}
+
+function stageCover(state) {
+  Object.assign(state.cook, { facing: 1, moving: true, hand: { id: 'greens', stage: 'ready' } });
+  state.board.food = { id: 'greens', stage: 'raw' };
+  state.board.cuts = 3;
+  state.pots[1].age = 11.5;
+  state.coverMotion = .32;
+  moveCoverCook(state);
+  state.elapsed -= .13;
+  chopIngredient(state);
+  moveParticles(state, .13);
+  state.elapsed += .13;
+}
+
+export function moveCoverCook(state) {
+  const progress = ((state.coverMotion + 1.18) % 3) / 3;
+  const mix = (from, to) => from + (to - from) * progress;
+  const [x, y] = coverStart.map((value, axis) => mix(mix(value, coverControl[axis]), mix(coverControl[axis], coverEnd[axis])));
+  state.cook.x = x;
+  state.cook.y = y - 20;
+}
+
+const [chop, , plate] = worktops;
+const coverStart = routePoint(chop);
+const coverEnd = routePoint(burners[1]);
+const coverControl = routeSegment(coverStart, coverEnd);
 
 export function drawRushView(ctx, state) {
   drawRoom(ctx);

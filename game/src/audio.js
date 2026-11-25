@@ -1,4 +1,5 @@
-// Synthesizes short local sound cues for movement through kitchen tasks.
+// Synthesizes the kitchen sound cues.
+
 export function createKitchenAudio() {
   let context;
   let muted = false;

@@ -6,12 +6,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="./style.css">
   <title>Lantern &amp; Ladle</title>
 </head>
 <body>
-  <main id="game-shell" aria-label="Lantern and Ladle">
-    <canvas id="kitchen" width="1280" height="800" aria-label="Night market kitchen and live order board"></canvas>
+  <main class="stage" aria-label="Lantern and Ladle">
+    <canvas id="kitchen-game"
+      width="1280" height="800" aria-label="Night market kitchen and live order board"></canvas>
     <nav id="service-buttons" aria-label="Service controls">
       <button id="route-button" aria-pressed="true">Route <kbd>T</kbd></button>
       <button id="book-button">Recipes <kbd>R</kbd></button>
@@ -21,6 +21,7 @@
     <section id="screen" hidden aria-label="Game menu"></section>
     <p id="announcement" role="status" class="visually-hidden"></p>
   </main>
-  <script type="module" src="./src/main.js"></script>
+  <link rel="stylesheet" href="./ui.css">
+  <script type="module" src="./src/game.js"></script>
 </body>
 </html>
