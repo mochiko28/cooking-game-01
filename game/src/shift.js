@@ -4,13 +4,13 @@ export function serviceWave(elapsed) {
   return serviceWaves.findLast(wave => elapsed >= wave.start);
 }
 
-export function recordService(state, ticket, vipBonus) {
+export function recordService(state, ticket, vipBonus, sharedPrepMultiplier = 1) {
   const freshness = Math.max(0, ticket.left / ticket.patience);
   state.combo++;
   state.bestCombo = Math.max(state.bestCombo, state.combo);
   state.served++;
   state.servedByWave[serviceWaves.indexOf(serviceWave(state.elapsed))]++;
-  const tip = Math.floor((4 + 16 * freshness + vipBonus) * comboMultiplier(state.combo));
+  const tip = Math.floor((4 + 16 * freshness + vipBonus) * comboMultiplier(state.combo)) * sharedPrepMultiplier;
   const coins = 26 + ticket.recipe.layers.length * 6 + tip;
   state.tips += tip;
   state.coins += coins;

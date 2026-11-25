@@ -204,7 +204,8 @@ function serveReadyPlate(state) {
   state.sound('serve');
   burst(state, 1039, 656, '#ffdb79', 22);
   const details = service.bonus ? 'VIP bonus!' : state.combo > 1 ? `×${comboMultiplier(state.combo)} tips` : 'Order served!';
-  return `+${service.coins} coins  ·  ${details}`;
+  const sharedPrep = `${service.sharedPrepMultiplier}× tips · shared ingredient${service.bonus ? ' · VIP bonus!' : ''}`;
+  return `+${service.coins} coins  ·  ${service.sharedPrepMultiplier > 1 ? sharedPrep : details}`;
 }
 
 function burst(state, x, y, color, count = 8) {

@@ -10,6 +10,7 @@ export function updateOrders(state, dt) {
   if (waiting.length < state.orders.length) {
     state.missed += state.orders.length - waiting.length;
     state.combo = 0;
+    state.lastServedRecipe = null;
     state.orders = waiting;
   }
   if (state.elapsed >= state.nextArrival && state.orders.length < ticketCapacity) {
@@ -47,10 +48,20 @@ export function focusNextTicket(state) {
 export function scoreServe(state, recipe) {
   const candidates = state.orders.filter(ticket => ticket.recipe === recipe);
   const ticket = candidates.find(order => vipTip(order)) ?? candidates[0];
-  if (!ticket) return null;
+  if (!ticket) {
+    state.lastServedRecipe = null;
+    return null;
+  }
   state.orders = state.orders.filter(order => order !== ticket);
   const bonus = vipTip(ticket);
-  return { coins: recordService(state, ticket, bonus), bonus };
+  const sharedPrepMultiplier = comboBonusForSharedPrep(state.lastServedRecipe, recipe);
+  state.lastServedRecipe = recipe;
+  return { coins: recordService(state, ticket, bonus, sharedPrepMultiplier), bonus, sharedPrepMultiplier };
+}
+
+export function comboBonusForSharedPrep(previous, next) {
+  if (previous && previous.id !== next.id && previous.layers.some(id => next.layers.includes(id))) return 2;
+  return 1;
 }
 
 export const ticketCapacity = 4;

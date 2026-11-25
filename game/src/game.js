@@ -166,6 +166,7 @@ function createShift(seed, sound, announce) {
   const state = {
     elapsed: 0, screen: 'title', orders: [], nextTicket: 1, nextArrival: 14,
     coins: 0, tips: 0, served: 0, servedByWave: serviceWaves.map(() => 0), missed: 0, combo: 0, bestCombo: 0,
+    lastServedRecipe: null,
     focusedNumber: null, showRoute: true,
     cook: { x: 198, y: 419, facing: 1, moving: false, hand: null },
     board: { food: null, cuts: 0, mark: -10 },

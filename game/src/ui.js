@@ -1,5 +1,5 @@
 // Draws the service HUD and ticket rail, and renders the game menus.
-import { focusedTicket, recipes, ticketCapacity, vipSeconds } from './orders.js';
+import { comboBonusForSharedPrep, focusedTicket, recipes, ticketCapacity, vipSeconds } from './orders.js';
 import {
   comboMultiplier, readShiftClock, serviceWave, serviceWaves, shiftLength, shiftStars,
 } from './shift.js';
@@ -228,13 +228,17 @@ export function renderScreen(element, state) {
 }
 
 function recipeBook() {
+  const first = recipes.find(recipe => recipe.id === 'harvest');
+  const second = recipes.find(recipe => recipe.id === 'ember');
+  const shared = first.layers.find(id => second.layers.includes(id));
+  const multiplier = comboBonusForSharedPrep(first, second);
   return `<div class="sheet book-sheet">
     <header class="sheet-header">
       <h1>${Object.keys(ingredients).length} Ingredients → ${recipes.length} Dishes</h1>
       <button class="quiet" data-command="close">Close <kbd>R</kbd></button>
     </header>
     <ul class="recipe-grid">
-      ${recipes.map(recipe => `<li class="recipe-card" style="--recipe-color:${recipe.color}">
+      ${recipes.map(recipe => `<li class="recipe-card${recipe === first || recipe === second ? ' combo-card' : ''}" style="--recipe-color:${recipe.color}">
         <div class="recipe-title">
           <h2>${recipe.name}</h2>
           <canvas width="128" height="75" data-dish="${recipe.id}" aria-hidden="true"></canvas>
@@ -242,7 +246,8 @@ function recipeBook() {
         <ol class="recipe-layers" aria-label="Assembly order">
           ${recipe.layers.map(id => {
             const food = ingredients[id];
-            return `<li title="${food.name} · ${ingredientPrepLabel[food.route]}">
+            const linked = (recipe === first || recipe === second) && id === shared;
+            return `<li${linked ? ' class="shared-ingredient"' : ''} title="${food.name} · ${ingredientPrepLabel[food.route]}">
               <span class="visually-hidden">${food.name}, ${ingredientPrepLabel[food.route]}</span>
               <canvas width="128" height="115" data-food="${id}" aria-hidden="true"></canvas>
             </li>`;
@@ -250,6 +255,11 @@ function recipeBook() {
         </ol>
       </li>`).join('')}
     </ul>
+    <p class="recipe-combo">
+      <span aria-hidden="true">Serve both back-to-back</span>
+      <strong aria-hidden="true">Shared ${ingredients[shared].name} → ${multiplier}× tips</strong>
+      <span class="visually-hidden">Serve ${first.name} and ${second.name} back-to-back. The second dish earns ${multiplier} times its tip because both use ${ingredients[shared].name.toLowerCase()}.</span>
+    </p>
   </div>`;
 }
 
