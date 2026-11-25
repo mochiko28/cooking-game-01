@@ -118,7 +118,7 @@ function drawOrderBoard(ctx, state) {
     else if (ticket) drawTicket(ctx, ticket, x, ticket === focus, cover ? state.coverMotion : null);
     else panel(ctx, x, ticketY, ticketWidth, ticketHeight, 7, '#19322a', '#416253');
   }
-  if (link) drawSharedPrepLink(ctx, link, cover);
+  if (link) drawSharedPrepLink(ctx, link, cover, state.showRoute);
 }
 
 function sharedPrepLink(state) {
@@ -139,19 +139,19 @@ function sharedPrepLink(state) {
   return null;
 }
 
-function drawSharedPrepLink(ctx, { first, second, ingredient, multiplier }, cover) {
+function drawSharedPrepLink(ctx, { first, second, ingredient, multiplier }, cover, showRoute) {
   const title = `SHARED ${ingredients[ingredient].name.toUpperCase()} → ${multiplier}× TIPS`;
   ctx.font = '800 23px system-ui';
   const width = Math.ceil(ctx.measureText(title).width) + 26;
   const start = ticketRailX + Math.min(first, second) * ticketSpacing + ticketDishX;
   const end = ticketRailX + Math.max(first, second) * ticketSpacing + ticketDishX;
-  const badgeX = Math.min((cover ? 1108 : 1242) - width, Math.max(cover ? 218 : 575, (start + end - width) / 2));
+  const badgeX = Math.min((cover ? 1108 : 1242) - width, Math.max(!cover && showRoute ? 575 : 254, (start + end - width) / 2));
   const badgeCenter = badgeX + width / 2;
-  const railY = ticketY - 3;
-  const bracket = [[start, ticketY + 12], [start, railY], [end, railY], [end, ticketY + 12]];
+  const anchor = Math.max(badgeX + 18, Math.min(badgeCenter, end - 14));
+  const bracket = [[start, ticketY + 12], [start, ticketY], [end, ticketY], [end, ticketY + 12]];
   stroke(ctx, palette.night, 9, bracket);
   stroke(ctx, palette.mint, 5, bracket);
-  if (badgeCenter > end) stroke(ctx, palette.mint, 5, [[end, railY], [badgeCenter, railY]]);
+  stroke(ctx, palette.mint, 5, [[Math.min(anchor, end), ticketY], [anchor, ticketY], [anchor, 114]]);
   panel(ctx, badgeX, 92, width, 24, 6, '#e3fa99');
   label(ctx, title, badgeCenter, 104, 23, palette.ink, { align: 'center' });
 }
