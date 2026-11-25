@@ -1,6 +1,6 @@
 // Stages the four screenshot scenes and draws the rush showcase.
 import { recipes, spawnOrder, ticketCapacity } from './orders.js';
-import { serviceWave, serviceWaves, shiftLength } from './shift.js';
+import { serviceWave, shiftLength } from './shift.js';
 import { chooseFastestRoute, estimateRouteSeconds } from './route.js';
 import { burners, chopIngredient, coverIsland, ingredients, moveParticles, useStation, worktops } from './stations.js';
 import { drawRoom, routePoint, routeSegment } from './room.js';
@@ -118,7 +118,7 @@ const coverControl = routeSegment(coverStart, coverEnd);
 
 export function drawRushView(ctx, state) {
   drawRoom(ctx);
-  drawRushHeader(ctx, state.elapsed, state.rushMotion);
+  drawRushHeader(ctx, state.elapsed, state.rushMotion, state.orders.length);
   drawRushRail(ctx, state.orders);
   drawRushBurner(ctx, state, 0, 26);
   drawRushBurner(ctx, state, 1, 920);
@@ -135,39 +135,29 @@ export function drawRushView(ctx, state) {
   drawServePop(ctx, state.servePop, age, 640, 704, 2.1);
 }
 
-function drawRushHeader(ctx, elapsed, motion) {
+function drawRushHeader(ctx, elapsed, motion, orderCount) {
   const wave = serviceWave(elapsed);
-  panel(ctx, 26, 20, 600, 117, 12, '#a73428', '#ff9365', 4);
-  drawLastCall(ctx, wave.name.toUpperCase(), 326, 78, 80, motion);
+  panel(ctx, 26, 32, 548, 121, 12, '#a73428', '#ff9365', 4);
+  drawLastCall(ctx, wave.name.toUpperCase(), 300, 93, 78, motion);
 
-  panel(ctx, 644, 20, 320, 117, 12, '#382d25', '#b87551', 3);
-  label(ctx, 'RUSH x2', 804, 57, 58, '#ffdda8', { align: 'center', weight: 900 });
-  const intensity = (serviceWaves.indexOf(wave) + 1) / serviceWaves.length;
-  for (let i = 0; i < 6; i++) {
-    panel(ctx, 664 + i * 47, 91, 41, 26, 4, i / 6 < intensity ? '#ff9a61' : '#614138');
-  }
-
-  panel(ctx, 982, 20, 272, 117, 12, '#491913', '#a14633', 3);
-  drawUrgentClock(ctx, elapsed, motion, 1118, 78);
+  panel(ctx, 592, 32, 243, 121, 12, '#382d25', '#b87551', 3);
+  label(ctx, 'RUSH x2', 714, 69, 53, '#ffdda8', { align: 'center', weight: 900 });
+  label(ctx, `+${orderCount - ticketCapacity} waiting`, 714, 121, 37, '#ffdfab', { align: 'center' });
+  drawUrgentClock(ctx, elapsed, motion, 1056, 92, 1.48);
 }
 
 function drawRushRail(ctx, orders) {
-  panel(ctx, 26, 151, 1228, 216, 12, '#183029', '#9a7455', 2);
-  label(ctx, 'ORDER BOARD', 42, 178, 40, palette.light);
-  panel(ctx, 962, 157, 278, 45, 10, '#6b3427', '#f79365', 2);
-  label(ctx, `+${orders.length - ticketCapacity} waiting`, 1101, 178, 40, '#ffdfab', { align: 'center' });
-
   orders.slice(0, ticketCapacity).forEach((ticket, i) => {
-    const x = 39 + i * 304;
-    const width = 290;
+    const x = 26 + i * 312;
+    const width = 292;
     const progress = ticket.left / ticket.patience;
     const urgent = progress <= .34;
-    panel(ctx, x, 211, width, 145, 10, '#ffebcb', urgent ? '#ff7959' : '#dbac66', 4);
-    panel(ctx, x + 12, 222, width - 24, 7, 3, ticket.recipe.color);
+    panel(ctx, x, 186, width, 174, 10, urgent ? '#8c362b' : '#ffebcb', urgent ? '#ff7959' : '#dbac66', 4);
     const [first, ...rest] = ticket.recipe.name.split(' ');
-    label(ctx, first, x + width / 2, 253, 60, palette.ink, { align: 'center', weight: 900 });
-    label(ctx, rest.join(' '), x + width / 2, 307, 60, palette.ink, { align: 'center', weight: 900 });
-    meter(ctx, x + 16, 334, width - 32, 13, progress, urgent ? '#ff6954' : '#ffc260', urgent ? '#67302a' : '#58402d');
+    const ink = urgent ? '#fff0d5' : palette.ink;
+    label(ctx, first, x + width / 2, 230, 63, ink, { align: 'center', weight: 900, maxWidth: width - 24 });
+    label(ctx, rest.join(' '), x + width / 2, 291, 63, ink, { align: 'center', weight: 900, maxWidth: width - 24 });
+    meter(ctx, x + 16, 333, width - 32, 15, progress, urgent ? '#ff8b66' : '#ffc260', urgent ? '#51221c' : '#58402d');
   });
 }
 

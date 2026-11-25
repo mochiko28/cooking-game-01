@@ -52,6 +52,10 @@ function drawShiftTimer(ctx, elapsed, coverMotion, live) {
   const cover = coverMotion !== null;
   elapsed += coverMotion ?? 0;
   const remaining = Math.max(0, shiftLength - elapsed);
+  if (live && remaining < 30) {
+    drawUrgentClock(ctx, elapsed, elapsed, 911, 48, .8);
+    return;
+  }
   const urgent = cover || remaining < 30;
   const color = urgent ? '#ff9b59' : '#ffda8b';
   const pulse = (1 + Math.cos((coverMotion ?? 0) * 2 * Math.PI)) / 2;
@@ -80,8 +84,7 @@ function drawShiftTimer(ctx, elapsed, coverMotion, live) {
   stroke(ctx, color, 2.5, [[x, y], [x + Math.cos(angle) * 14, y + Math.sin(angle) * 14]]);
   oval(ctx, x, y, 2.7, 2.7, color);
   label(ctx, 'SHIFT TIMER', cover ? 880 : 945, 29, cover ? 19 : 17, color, { align: cover ? 'left' : 'center' });
-  if (live && urgent) drawUrgentClock(ctx, elapsed, elapsed, 945, 58, .53);
-  else label(ctx, readShiftClock(elapsed), cover ? 873 : 945, 59, cover ? 37 : 44, '#fff0d7', { align: cover ? 'left' : 'center', face: 'monospace' });
+  label(ctx, readShiftClock(elapsed), cover ? 873 : 945, 59, cover ? 37 : 44, '#fff0d7', { align: cover ? 'left' : 'center', face: 'monospace' });
   if (cover) {
     ctx.save();
     ctx.globalAlpha = .78 + pulse * .22;
@@ -259,16 +262,24 @@ export function drawLastCall(ctx, text, x, y, size, motion) {
 
 export function drawUrgentClock(ctx, elapsed, motion, x, y, scale = 1) {
   const pulse = .5 + .5 * Math.cos(motion * 2 * Math.PI);
+  const remaining = Math.max(0, shiftLength - elapsed);
+  const start = -Math.PI / 2;
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   ctx.shadowColor = '#ff3e28';
-  ctx.shadowBlur = (12 + 18 * pulse) * scale;
-  panel(ctx, -117 - 4 * pulse, -43 - 3 * pulse, 234 + 8 * pulse, 86 + 6 * pulse,
-    23, null, '#ff5743', 5 + 2 * pulse);
+  ctx.shadowBlur = (15 + 13 * pulse) * scale;
+  oval(ctx, 0, 0, 126, 47, '#411b19', '#d64435', 5 + 2 * pulse);
+  if (remaining > 0) {
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 126, 47, 0, start, start + 2 * Math.PI * remaining / shiftLength);
+    ctx.strokeStyle = '#ffac87';
+    ctx.lineCap = 'round';
+    ctx.lineWidth = 9;
+    ctx.stroke();
+  }
   ctx.shadowBlur = 0;
-  panel(ctx, -108, -35, 216, 70, 18, '#591d17', '#ff9a79', 3);
-  label(ctx, readShiftClock(elapsed), 0, 0, 77 + pulse * 4, '#ffe5d0',
+  label(ctx, readShiftClock(elapsed), 0, 0, 79, '#ffe5d0',
     { align: 'center', face: 'monospace', weight: 900 });
   ctx.restore();
 }
