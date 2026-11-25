@@ -14,10 +14,11 @@ export function startGame() {
     const dt = Math.max(0, Math.min(.05, (now - last) / 1000));
     last = now;
     if (state.screen === 'play' && !state.staged) updateShift(state, dt, input.read());
-    if (state.shot === 'cover' && !stillCover) {
+    if (state.shot === 'cover' && !stillShot) {
       state.coverMotion = (state.coverMotion + dt) % 3;
       moveCoverCook(state);
     }
+    if (state.shot === 'rush' && !stillShot) state.rushMotion += dt;
     if (paintedScreen !== state.screen) {
       renderScreen(screen, state);
       paintedScreen = state.screen;
@@ -90,7 +91,7 @@ export function startGame() {
   const audio = createKitchenAudio();
   const coverPlan = coverRoutePlan();
   const query = new URLSearchParams(location.search);
-  const stillCover = query.has('still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const stillShot = query.has('still') || matchMedia('(prefers-reduced-motion: reduce)').matches;
   const seed = Number(query.get('seed') ?? new Date().getDate());
   const newShift = () => createShift(seed, audio.play, message => { announcement.textContent = message; });
   let state = newShift();

@@ -579,23 +579,29 @@ function drawCoverRoute(ctx, { stops, detour, fastest, slower }) {
   ctx.arcTo(...left, ...right, 14);
   ctx.arcTo(...right, ...plate, 14);
   ctx.lineTo(...plate);
-  ctx.setLineDash([5, 5]);
+  ctx.setLineDash([8, 7]);
   ctx.lineCap = 'round';
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = '#e3ebc378';
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#d6e1bd98';
   ctx.stroke();
   ctx.restore();
 
   drawTrail(ctx, chop, [stove, plate]);
   const labels = ['CHOP', 'STOVE', 'PLATE'];
   points.forEach(([x, y], index) => {
-    panel(ctx, x - 22, y + 18, 70, 23, 7, '#203b30');
-    label(ctx, labels[index], x + 13, y + 30, 16, '#fff1bf', { align: 'center' });
+    panel(ctx, x - 36, y + 18, 82, 23, 7, '#203b30');
+    label(ctx, labels[index], x + 5, y + 30, 20, '#fff1bf', { align: 'center' });
     oval(ctx, x, y, 17, 17, palette.gold, '#283d31', 3);
     label(ctx, String(index + 1), x, y + 1, 23, '#25342a', { align: 'center' });
   });
-  panel(ctx, 834, 400, 284, 32, 8, '#ffe1a0', '#304438');
-  label(ctx, `FASTEST ROUTE ${fastest} s (alt ${slower} s)`, 976, 416, 19, '#25342a', { align: 'center' });
+  panel(ctx, 473, 362, 341, 34, 8, '#213b30', '#a1b699');
+  label(ctx, `ALT ${slower} s — around island`, 643, 379, 25, '#e3edd3', { align: 'center' });
+
+  stroke(ctx, '#ffe1a0', 3, [[766, 477], [744, 477], [706, 510]]);
+  panel(ctx, 765, 457, 143, 40, 8, '#ffe1a0', '#304438');
+  label(ctx, `BEST ${fastest} s`, 836, 477, 28, '#25342a', { align: 'center' });
+  panel(ctx, 914, 460, 73, 34, 8, '#254637', '#bfd78b');
+  label(ctx, `-${slower - fastest} s`, 950, 477, 24, '#dcf2a4', { align: 'center' });
 }
 
 function drawTrail(ctx, from, points) {

@@ -143,18 +143,20 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   color: #27392e;
 }
 .recipe-card h2 {
-  margin: 0 4px 6px;
-  font-size: 88px;
+  margin: 0 4px;
+  font-size: 68px;
   font-weight: 900;
   letter-spacing: -.05em;
   line-height: 1;
 }
-.recipe-build {
+.recipe-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 7px;
 }
-.recipe-build > canvas {
+.recipe-title > canvas {
   display: block;
   flex: none;
   background: var(--recipe-color);
@@ -163,23 +165,31 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .recipe-layers {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .recipe-layers li {
+  display: grid;
+  place-items: center;
   position: relative;
+  width: 128px;
+  height: 115px;
   background: #274537;
   border-radius: 7px;
+}
+.recipe-layers li:has([data-food="greens"]) {
+  box-shadow: inset 0 0 0 6px #a7cf64;
+  background: #1b3d31;
 }
 .recipe-layers li + li::before {
   position: absolute;
   top: 50%;
-  left: -17px;
-  transform: translateY(-56%);
-  content: '›';
-  color: #895833;
+  left: -10px;
+  transform: translate(-50%, -54%);
+  content: '+' / '';
+  color: #64432e;
   font-size: 33px;
   font-weight: 850;
 }

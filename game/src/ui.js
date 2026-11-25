@@ -33,7 +33,7 @@ export function drawServiceHud(ctx, state) {
     }
   }
 
-  drawShiftTimer(ctx, state.elapsed);
+  drawShiftTimer(ctx, state.elapsed, rushCover ? state.coverMotion : null);
 
   panel(ctx, 1036, 15, 224, 69, 9, '#213e33', '#49675a');
   oval(ctx, 1058, 37, 11, 11, '#eeb667', '#ffdb8a');
@@ -46,28 +46,45 @@ export function drawServiceHud(ctx, state) {
   drawOrderBoard(ctx, state);
 }
 
-function drawShiftTimer(ctx, elapsed) {
+function drawShiftTimer(ctx, elapsed, coverMotion) {
+  const cover = coverMotion !== null;
+  elapsed += coverMotion ?? 0;
   const remaining = Math.max(0, shiftLength - elapsed);
-  const urgent = remaining < 30;
+  const urgent = cover || remaining < 30;
   const color = urgent ? '#ff9b59' : '#ffda8b';
+  const pulse = (1 + Math.cos((coverMotion ?? 0) * 2 * Math.PI)) / 2;
   panel(ctx, 799, 11, 225, 74, 10, urgent ? '#5f3329' : '#2f3c2e', urgent ? '#e98352' : '#a78550', 2);
   const x = 841;
   const y = 48;
   oval(ctx, x, y, 25, 25, '#1e2c26', urgent ? '#90533d' : '#637358', 6);
   if (remaining > 0) {
     const start = -Math.PI / 2;
+    const end = start + 2 * Math.PI * remaining / shiftLength;
+    ctx.save();
+    if (cover) {
+      ctx.shadowColor = '#ff772f';
+      ctx.shadowBlur = 9 + pulse * 13;
+    }
     ctx.beginPath();
-    ctx.arc(x, y, 25, start, start + 2 * Math.PI * remaining / shiftLength);
+    ctx.arc(x, y, 25, start, end);
     ctx.strokeStyle = color;
-    ctx.lineWidth = urgent ? 7 + Math.sin(elapsed * 10) : 6;
+    ctx.lineWidth = cover ? 8 : urgent ? 7 + Math.sin(elapsed * 10) : 6;
     ctx.lineCap = 'round';
     ctx.stroke();
+    if (cover) oval(ctx, x + Math.cos(end) * 25, y + Math.sin(end) * 25, 4.5, 4.5, '#ffe4a1');
+    ctx.restore();
   }
   const angle = -Math.PI / 2 + 2 * Math.PI * (elapsed % 60) / 60;
   stroke(ctx, color, 2.5, [[x, y], [x + Math.cos(angle) * 14, y + Math.sin(angle) * 14]]);
   oval(ctx, x, y, 2.7, 2.7, color);
-  label(ctx, 'SHIFT TIMER', 945, 29, 17, color, { align: 'center' });
-  label(ctx, readShiftClock(elapsed), 945, 59, 44, '#fff0d7', { align: 'center', face: 'monospace' });
+  label(ctx, 'SHIFT TIMER', cover ? 880 : 945, 29, cover ? 19 : 17, color, { align: cover ? 'left' : 'center' });
+  label(ctx, readShiftClock(elapsed), cover ? 873 : 945, 59, cover ? 37 : 44, '#fff0d7', { align: cover ? 'left' : 'center', face: 'monospace' });
+  if (cover) {
+    ctx.save();
+    ctx.globalAlpha = .78 + pulse * .22;
+    label(ctx, '-0:01', 1015, 64, 19, '#ffba85', { align: 'right', face: 'monospace' });
+    ctx.restore();
+  }
 }
 
 function drawStallLantern(ctx, x, y) {
@@ -194,31 +211,31 @@ export function renderScreen(element, state) {
     drawDish(canvas.getContext('2d'), recipe.layers, canvas.width / 2, canvas.height * .46, canvas.width / 120, recipe.color, recipe.shape);
   }
   for (const canvas of element.querySelectorAll('[data-food]')) {
-    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 2.15, 'ready');
+    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 2, 'ready');
   }
 }
 
 function recipeBook() {
   return `<div class="sheet book-sheet">
     <header class="sheet-header">
-      <h1>Recipe Book</h1>
+      <h1>${Object.keys(ingredients).length} Ingredients → ${recipes.length} Dishes</h1>
       <button class="quiet" data-command="close">Close <kbd>R</kbd></button>
     </header>
     <ul class="recipe-grid">
       ${recipes.map(recipe => `<li class="recipe-card" style="--recipe-color:${recipe.color}">
-        <h2>${recipe.name}</h2>
-        <div class="recipe-build">
-          <canvas width="166" height="99" data-dish="${recipe.id}" aria-hidden="true"></canvas>
-          <ol class="recipe-layers" aria-label="Assembly order">
-            ${recipe.layers.map(id => {
-              const food = ingredients[id];
-              return `<li title="${food.name} · ${ingredientPrepLabel[food.route]}">
-                <span class="visually-hidden">${food.name}, ${ingredientPrepLabel[food.route]}</span>
-                <canvas width="82" height="81" data-food="${id}" aria-hidden="true"></canvas>
-              </li>`;
-            }).join('')}
-          </ol>
+        <div class="recipe-title">
+          <h2>${recipe.name}</h2>
+          <canvas width="128" height="75" data-dish="${recipe.id}" aria-hidden="true"></canvas>
         </div>
+        <ol class="recipe-layers" aria-label="Assembly order">
+          ${recipe.layers.map(id => {
+            const food = ingredients[id];
+            return `<li title="${food.name} · ${ingredientPrepLabel[food.route]}">
+              <span class="visually-hidden">${food.name}, ${ingredientPrepLabel[food.route]}</span>
+              <canvas width="128" height="115" data-food="${id}" aria-hidden="true"></canvas>
+            </li>`;
+          }).join('')}
+        </ol>
       </li>`).join('')}
     </ul>
   </div>`;

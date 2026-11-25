@@ -32,6 +32,7 @@ export function stageScreenshot(state, scene) {
 
   if (scene === 'rush') {
     state.elapsed = 153;
+    state.rushMotion = .24;
     state.coins = 466;
     state.served = 7;
     state.combo = 5;
@@ -65,8 +66,8 @@ export function coverRoutePlan() {
   const stops = [chop, burners[1], plate];
   const { x, y, w } = coverIsland;
   const detour = [
-    { standX: x - 28, standY: y - 23 },
-    { standX: x + w + 31, standY: y - 23 },
+    { standX: x - 28, standY: y - 13 },
+    { standX: x + w + 31, standY: y - 13 },
   ];
   // Compare the complete walks at the cover's presentation pace.
   const start = { x: chop.standX, y: chop.standY, speed: 105 };
@@ -106,14 +107,14 @@ const coverControl = routeSegment(coverStart, coverEnd);
 
 export function drawRushView(ctx, state) {
   drawRoom(ctx);
-  drawRushHeader(ctx, state.elapsed);
+  drawRushHeader(ctx, state.elapsed, state.rushMotion);
   drawRushRail(ctx, state.orders);
   panel(ctx, 26, 384, 1228, 389, 14, '#b68051', '#f8c385', 3);
   drawRushBurner(ctx, state, 0, 44, 735);
   drawRushBurner(ctx, state, 1, 797, 438);
 }
 
-function drawRushHeader(ctx, elapsed) {
+function drawRushHeader(ctx, elapsed, motion) {
   const wave = serviceWave(elapsed);
   panel(ctx, 26, 20, 659, 117, 12, '#a73428', '#ff9365', 4);
   label(ctx, wave.name.toUpperCase(), 355, 78, 95, '#fff0d5', { align: 'center', weight: 950 });
@@ -126,9 +127,18 @@ function drawRushHeader(ctx, elapsed) {
     panel(ctx, 725 + i * 40, 113 - height, 30, height, 4, i / 6 < intensity ? '#ff9a61' : '#614138');
   }
 
-  panel(ctx, 996, 20, 258, 117, 12, '#531e1a', '#ff9365', 4);
-  label(ctx, 'TIME LEFT', 1125, 43, 24, '#ffdda8', { align: 'center' });
-  label(ctx, readShiftClock(elapsed), 1125, 92, 73, '#ff9b59', { align: 'center', face: 'monospace' });
+  panel(ctx, 996, 20, 258, 117, 12, '#491913', '#ff775c', 4);
+  ctx.save();
+  for (const offset of [0, .5]) {
+    const pulse = (motion + offset) % 1;
+    const w = 204 + pulse * 36;
+    const h = 68 + pulse * 16;
+    ctx.globalAlpha = .8 - pulse * .6;
+    panel(ctx, 1125 - w / 2, 91 - h / 2, w, h, 25, null, '#ff674f', 5 - pulse * 2);
+  }
+  ctx.restore();
+  label(ctx, 'TIME LEFT', 1125, 40, 23, '#ffdda8', { align: 'center' });
+  label(ctx, readShiftClock(elapsed), 1125, 92, 70, '#ff705b', { align: 'center', face: 'monospace' });
 }
 
 function drawRushRail(ctx, orders) {
