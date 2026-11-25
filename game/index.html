@@ -1,0 +1,24 @@
+<!doctype html>
+<!-- Lantern & Ladle is a night-market cooking game. Route ingredients through prep and heat,
+     build dishes layer by layer, and serve before a rising dinner rush empties your tickets. -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="./style.css">
+  <title>Lantern &amp; Ladle</title>
+</head>
+<body>
+  <main id="game-shell" aria-label="Lantern and Ladle">
+    <canvas id="kitchen" width="1280" height="800" aria-label="Night market kitchen and live order board"></canvas>
+    <nav id="service-buttons" aria-label="Service controls">
+      <button id="book-button">Recipes <kbd>R</kbd></button>
+      <button id="pause-button">Pause <kbd>P</kbd></button>
+      <button id="sound-button" aria-pressed="false">Sound on <kbd>M</kbd></button>
+    </nav>
+    <section id="screen" hidden aria-label="Game menu"></section>
+    <p id="announcement" role="status" class="visually-hidden"></p>
+  </main>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
