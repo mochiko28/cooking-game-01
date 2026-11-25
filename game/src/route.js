@@ -3,35 +3,7 @@ import { focusedTicket } from './orders.js';
 import { burners, needsChopping, needsCooking, pantry, pickIngredient, sink, stovePhase, worktops } from './stations.js';
 import { cookSpeed } from './cook.js';
 
-export function chooseFastestRoute(cook, routes) {
-  let best = [];
-  let shortest = Infinity;
-  for (const route of routes) {
-    const seconds = estimateRouteSeconds(cook, route);
-    if (seconds < shortest) {
-      best = route;
-      shortest = seconds;
-    }
-  }
-  return best;
-}
-
-export function routeForTicket(state, ticket = focusedTicket(state)) {
-  return chooseFastestRoute(state.cook, ticketRoutes(state, ticket));
-}
-
-export function estimateRouteSeconds(cook, stations) {
-  let { x, y } = cook;
-  let distance = 0;
-  for (const { standX, standY } of stations) {
-    distance += Math.hypot(standX - x, standY - y);
-    x = standX;
-    y = standY;
-  }
-  return distance / (cook.speed ?? cookSpeed);
-}
-
-function ticketRoutes(state, ticket) {
+function prepAndServeRoutes(state, ticket) {
   if (!ticket) return [];
   const { recipe } = ticket;
   const { hand } = state.cook;
@@ -58,6 +30,34 @@ function ticketRoutes(state, ticket) {
       ...assembly.slice(0, index), pass, ...assembly.slice(index), pass,
     ])];
   });
+}
+
+export function chooseFastestRoute(cook, routes) {
+  let best = [];
+  let shortest = Infinity;
+  for (const route of routes) {
+    const seconds = estimateRouteSeconds(cook, route);
+    if (seconds < shortest) {
+      best = route;
+      shortest = seconds;
+    }
+  }
+  return best;
+}
+
+export function routeForTicket(state, ticket = focusedTicket(state)) {
+  return chooseFastestRoute(state.cook, prepAndServeRoutes(state, ticket));
+}
+
+export function estimateRouteSeconds(cook, stations) {
+  let { x, y } = cook;
+  let distance = 0;
+  for (const { standX, standY } of stations) {
+    distance += Math.hypot(standX - x, standY - y);
+    x = standX;
+    y = standY;
+  }
+  return distance / (cook.speed ?? cookSpeed);
 }
 
 function layerRoutes(state, id) {

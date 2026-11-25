@@ -1,6 +1,18 @@
 // Manages recipes and the live order board, including VIP tickets.
 import { recordService, serviceWave } from './shift.js';
 
+function comboBonusForSharedPrep(prior, next) {
+  if (prior && prior.id !== next.id && prior.layers.some(id => next.layers.includes(id))) return 2;
+  return 1;
+}
+
+export { comboBonusForSharedPrep };
+
+export function matchingRecipes(layers) {
+  return recipes.filter(recipe => layers.length <= recipe.layers.length
+    && layers.every((ingredient, index) => ingredient === recipe.layers[index]));
+}
+
 export function updateOrders(state, dt) {
   for (const ticket of state.orders) {
     ticket.left -= dt;
@@ -59,11 +71,6 @@ export function scoreServe(state, recipe) {
   return { coins: recordService(state, ticket, bonus, sharedPrepMultiplier), bonus, sharedPrepMultiplier };
 }
 
-export function comboBonusForSharedPrep(previous, next) {
-  if (previous && previous.id !== next.id && previous.layers.some(id => next.layers.includes(id))) return 2;
-  return 1;
-}
-
 export const ticketCapacity = 4;
 
 function vipClock(number, elapsed) {
@@ -84,8 +91,3 @@ export const recipes = [
   { id: 'harvest', name: 'Harvest Bowl', layers: ['noodles', 'tofu', 'shrooms', 'greens'], color: '#d3ae82', shape: 'bowl' },
   { id: 'ember', name: 'Ember Pot', layers: ['broth', 'shrimp', 'egg', 'greens'], color: '#ed9e63', shape: 'bowl' },
 ];
-
-export function matchingRecipes(layers) {
-  return recipes.filter(recipe => layers.length <= recipe.layers.length
-    && layers.every((ingredient, index) => ingredient === recipe.layers[index]));
-}

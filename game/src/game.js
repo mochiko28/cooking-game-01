@@ -5,7 +5,7 @@ import { routeForTicket } from './route.js';
 import { holdToChop, moveParticles, nearbyStation, stationAt, updateStove, useStation } from './stations.js';
 import { bindKitchenInput, walkCook, walkToStation } from './cook.js';
 import { createKitchenAudio } from './audio.js';
-import { drawKitchen } from './kitchen.js';
+import { drawKitchen } from './kitchen-view.js';
 import { drawServiceHud, renderScreen, ticketAt } from './ui.js';
 import { coverRoutePlan, drawRushView, moveCoverCook, stageScreenshot } from './shots.js';
 

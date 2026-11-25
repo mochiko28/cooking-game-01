@@ -187,7 +187,7 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 }
 .combo-card .recipe-layers { justify-content: flex-end; }
 /* The two highlighted tiles sit at the same right offset in the last row. */
-.recipe-grid::after {
+.book-sheet:not(.recipe-showcase) .recipe-grid::after {
   position: absolute;
   z-index: 1;
   bottom: -7px;
@@ -232,6 +232,53 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   color: var(--shared-ingredient);
   font-size: 54px;
   font-weight: 950;
+}
+
+.recipe-showcase {
+  --shared-ingredient: #e3ff76;
+  padding-block: 8px 9px;
+}
+.recipe-showcase h1 { font-size: 57px; }
+.recipe-showcase .sheet-header { margin-bottom: 5px; }
+.recipe-showcase .recipe-grid { row-gap: 7px; }
+.recipe-showcase .recipe-combo {
+  margin-top: 14px;
+  padding: 11px 12px 13px;
+  border: 3px solid #f3ffba;
+  background: var(--shared-ingredient);
+  color: #203b27;
+  font: 900 47px/1 system-ui, sans-serif;
+}
+.recipe-showcase .recipe-combo strong {
+  color: #122b22;
+  font-size: 70px;
+  font-weight: 950;
+}
+/* The center gutter carries the line from the strip to the two left-column tiles. */
+.recipe-showcase .recipe-grid::after {
+  position: absolute;
+  z-index: 1;
+  top: 126px;
+  bottom: -16px;
+  left: 50%;
+  width: 7px;
+  transform: translateX(-50%);
+  background: var(--shared-ingredient);
+  pointer-events: none;
+  content: '';
+}
+.recipe-showcase .shared-ingredient::after {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  right: -18px;
+  width: 39px;
+  height: 30px;
+  transform: translateY(-50%);
+  background: var(--shared-ingredient);
+  clip-path: polygon(0 50%, 37% 0, 37% 36%, 100% 36%, 100% 64%, 37% 64%, 37% 100%);
+  pointer-events: none;
+  content: '';
 }
 
 .results-sheet {

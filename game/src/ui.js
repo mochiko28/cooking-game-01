@@ -209,7 +209,7 @@ export function renderScreen(element, state) {
   if (element.hidden) return;
   const screens = {
     title: titleScreen,
-    recipes: recipeBook,
+    recipes: () => recipeBook(state.shot === 'recipes'),
     results: () => resultsScreen(state),
     pause: () => `<div class="sheet pause-sheet">
       <p class="kicker">LANTERN &amp; LADLE</p><h1>Service paused</h1>
@@ -227,12 +227,12 @@ export function renderScreen(element, state) {
   }
 }
 
-function recipeBook() {
-  const first = recipes.find(recipe => recipe.id === 'harvest');
-  const second = recipes.find(recipe => recipe.id === 'ember');
-  const shared = first.layers.find(id => second.layers.includes(id));
+function recipeBook(staged) {
+  const first = recipes.find(recipe => recipe.id === (staged ? 'garden' : 'harvest'));
+  const second = recipes.find(recipe => recipe.id === (staged ? 'harvest' : 'ember'));
+  const shared = 'greens';
   const multiplier = comboBonusForSharedPrep(first, second);
-  return `<div class="sheet book-sheet">
+  return `<div class="sheet book-sheet${staged ? ' recipe-showcase' : ''}">
     <header class="sheet-header">
       <h1>${Object.keys(ingredients).length} Ingredients → ${recipes.length} Dishes</h1>
       <button class="quiet" data-command="close">Close <kbd>R</kbd></button>

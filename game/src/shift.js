@@ -1,5 +1,13 @@
 // Tracks the shift clock, wave schedule, and service score.
 
+const serviceWaves = [ // 21/14/9s arrivals
+  { name: 'Opening', start: 0, interval: 21, patience: 74, layers: [2, 3], color: '#bde495' },
+  { name: 'Dinner Rush', start: 55, interval: 14, patience: 62, layers: [2, 4], color: '#ffd081' },
+  { name: 'Last Call', start: 123, interval: 9, patience: 49, layers: [3, 4], color: '#ffa088' },
+];
+
+export { serviceWaves };
+
 export function serviceWave(elapsed) {
   return serviceWaves.findLast(wave => elapsed >= wave.start);
 }
@@ -31,9 +39,3 @@ export function readShiftClock(elapsed) {
 }
 
 export const shiftLength = 180;
-
-export const serviceWaves = [
-  { name: 'Opening', start: 0, interval: 21, patience: 74, layers: [2, 3], color: '#bde495' },
-  { name: 'Dinner Rush', start: 55, interval: 14, patience: 62, layers: [2, 4], color: '#ffd081' },
-  { name: 'Last Call', start: 123, interval: 9, patience: 49, layers: [3, 4], color: '#ffa088' },
-];

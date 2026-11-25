@@ -3,7 +3,7 @@ import { recipes, spawnOrder, ticketCapacity } from './orders.js';
 import { readShiftClock, serviceWave, serviceWaves, shiftLength } from './shift.js';
 import { estimateRouteSeconds } from './route.js';
 import { burners, chopIngredient, coverIsland, ingredients, moveParticles, worktops } from './stations.js';
-import { drawBurner, drawRoom, routePoint, routeSegment } from './kitchen.js';
+import { drawBurner, drawRoom, routePoint, routeSegment } from './kitchen-view.js';
 import { label, meter, oval, palette, panel } from './paint.js';
 
 export function stageScreenshot(state, scene) {
