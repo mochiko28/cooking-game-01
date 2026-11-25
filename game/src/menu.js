@@ -102,6 +102,8 @@ function resultsScreen(state) {
     </ul>
   </section>`;
   const multiplier = comboMultiplier(state.bestCombo);
+  const { left, right, both } = state.servedByRoute;
+  const routeSummary = `<p class="route-summary">Stove routes <strong>Left ×${left} · Right ×${right} · Both ×${both}</strong></p>`;
   if (showcase) {
     return `<div class="sheet results-sheet results-showcase">
       <header><h1>Shift Results</h1>${rating}</header>
@@ -111,7 +113,7 @@ function resultsScreen(state) {
         <div><strong>x${multiplier}</strong><span>Combo</span></div>
       </div>
       ${waveChart}
-      <button class="primary" data-command="start">Play again</button>
+      ${routeSummary}
     </div>`;
   }
   const ranks = ['Quiet closing', 'First plate out', 'Finding your feet', 'Dinner delivered', 'Market favorite', 'Night market legend'];
@@ -130,6 +132,7 @@ function resultsScreen(state) {
       <div><strong>${state.bestCombo}</strong><span>Best combo</span></div>
       <div><strong>×${multiplier}</strong><span>Best multiplier</span></div>
     </div>
+    ${routeSummary}
     <p class="receipt-details"><b>Coins earned</b> ${state.coins} <span>◆</span> <b>Expired tickets</b> ${state.missed}</p>
     <button class="primary" data-command="start">Open again <kbd>↵</kbd></button>
   </div>`;

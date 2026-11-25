@@ -60,6 +60,7 @@ export function stageScreenshot(state, scene) {
     state.elapsed = shiftLength;
     state.served = 9;
     state.servedByWave = [2, 4, 3];
+    state.servedByRoute = { left: 4, right: 3, both: 2 };
     state.coins = 698;
     state.tips = 302;
     state.bestCombo = 6;

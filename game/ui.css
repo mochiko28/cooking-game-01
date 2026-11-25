@@ -345,7 +345,20 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .results-showcase .wave-name { text-transform: uppercase; }
 .results-showcase .wave-track { height: 9px; }
 .results-showcase .wave-chart strong { font-size: 64px; text-align: center; }
-.results-showcase .primary { justify-self: center; padding: 4px 24px; font-size: 42px; line-height: 1; }
+.results-sheet .route-summary {
+  padding: 7px 12px;
+  border: 1px solid #a2915d;
+  border-radius: 9px;
+  background: #182f26;
+  color: #ffdb95;
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1.08;
+  text-transform: uppercase;
+}
+.route-summary strong { margin-left: .3em; color: #fff1d3; }
+.results-sheet:not(.results-showcase) .route-summary { margin-top: 16px; }
+.results-showcase .route-summary { font-size: 51px; }
 .pause-sheet { text-align: center; width: 620px; padding: 48px 34px; }
 .pause-sheet .primary, .pause-sheet .quiet { margin: 27px 5px 0; }
 .visually-hidden {

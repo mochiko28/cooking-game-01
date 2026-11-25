@@ -9,11 +9,19 @@ function assembleRecipeLayers(state) {
   if (!choices.length) return 'That layer does not fit. Check the ticket order.';
   const completed = choices.find(recipe => recipe.layers.length === layers.length);
   if (completed && state.queuedPlate) return 'Serve a dish at the window to free the tray.';
+  const { burnerIndex } = state.cook.hand;
+  if (burnerIndex !== undefined) state.layerBurners.add(burnerIndex);
   state.layers = completed ? [] : layers;
   state.cook.hand = null;
   if (completed) {
-    if (state.ready) state.queuedPlate = completed;
-    else state.ready = completed;
+    if (state.ready) {
+      state.queuedPlate = completed;
+      state.queuedBurners = state.layerBurners;
+    } else {
+      state.ready = completed;
+      state.readyBurners = state.layerBurners;
+    }
+    state.layerBurners = new Set();
   }
   state.platePop = state.elapsed;
   burst(state, completed && !state.queuedPlate ? 1039 : 679, 660, '#ffce72', completed ? 18 : 8);
@@ -36,10 +44,16 @@ export function useStation(state, station) {
   if (station.id === 'plate') return assembleRecipeLayers(state);
   if (station.id === 'pass') return serveReadyPlate(state);
   if (state.cook.hand) state.cook.hand = null;
-  else if (state.layers.length) state.layers = [];
-  else if (state.queuedPlate) state.queuedPlate = null;
-  else if (state.ready) state.ready = null;
-  else return 'Use the sink to clear your hands or an unfinished dish.';
+  else if (state.layers.length) {
+    state.layers = [];
+    state.layerBurners.clear();
+  } else if (state.queuedPlate) {
+    state.queuedPlate = null;
+    state.queuedBurners = null;
+  } else if (state.ready) {
+    state.ready = null;
+    state.readyBurners = null;
+  } else return 'Use the sink to clear your hands or an unfinished dish.';
   state.sound('tick');
   return 'Counter cleared.';
 }
@@ -181,7 +195,7 @@ function useStove(state, index) {
   }
   const phase = stovePhase(pot);
   if (!cook.hand && (phase === 'cooked' || phase === 'burnt')) {
-    cook.hand = { id: pot.food.id, stage: phase === 'cooked' ? 'ready' : 'burnt' };
+    cook.hand = { id: pot.food.id, stage: phase === 'cooked' ? 'ready' : 'burnt', burnerIndex: index };
     pot.food = null;
     state.sound('tick');
     return phase === 'burnt' ? 'Burnt food goes in the sink.' : undefined;
@@ -197,11 +211,18 @@ const burnSeconds = 7;
 function serveReadyPlate(state) {
   if (!state.ready) return 'Finish a dish at the plating counter first.';
   const recipe = state.ready;
+  const usedBurners = state.readyBurners;
   const tipsBefore = state.tips;
   const service = scoreServe(state, recipe);
   state.ready = state.queuedPlate;
+  state.readyBurners = state.queuedBurners;
   state.queuedPlate = null;
+  state.queuedBurners = null;
   if (!service) return `No ticket for ${recipe.name}. The dish was cleared.`;
+  if (usedBurners?.size) {
+    const route = usedBurners.size === burners.length ? 'both' : usedBurners.has(0) ? 'left' : 'right';
+    state.servedByRoute[route]++;
+  }
   state.servePop = {
     at: state.elapsed,
     recipe,
