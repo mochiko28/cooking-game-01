@@ -214,12 +214,13 @@ function paintDishGlint(ctx, x, y, rx, ry, begin, end, color, width) {
 }
 
 export function label(ctx, text, x, y, size, color, options = {}) {
-  const { align = 'left', weight = 800, face = 'system-ui' } = options;
+  const { align = 'left', weight = 800, face = 'system-ui', maxWidth } = options;
   ctx.font = `${weight} ${size}px ${face}`;
   ctx.textAlign = align;
   ctx.textBaseline = 'middle';
   ctx.fillStyle = color;
-  ctx.fillText(text, x, y);
+  if (maxWidth === undefined) ctx.fillText(text, x, y);
+  else ctx.fillText(text, x, y, maxWidth);
 }
 
 export const palette = {
@@ -286,11 +287,12 @@ export function drawWoodGrain(ctx, x, y, w, h) {
   oval(ctx, x + w * .73, y + h * .71, 14, 4, null, '#8d57384d', 1);
 }
 
-export function drawKitchenSign(ctx, name, x, y, width, height, { size = 22, prep, prepSize = 11 } = {}) {
+export function drawKitchenSign(ctx, name, x, y, width, height, { size = 22, prep, prepSize = 11, prepColor = '#e8bf88' } = {}) {
   const title = name.toUpperCase();
   ctx.font = `800 ${size}px system-ui`;
   const w = width ?? Math.ceil(ctx.measureText(title).width) + 24;
   panel(ctx, x, y, w, height, height / 2, '#222d27', '#ba9065', 1);
-  label(ctx, title, x + w / 2, y + (prep ? 11 : height / 2), size, palette.light, { align: 'center' });
-  if (prep) label(ctx, prep, x + w / 2, y + 27, prepSize, '#e8bf88', { align: 'center' });
+  label(ctx, title, x + w / 2, y + (prep ? 11 : height / 2), size, palette.light, { align: 'center', maxWidth: w - 6 });
+  if (prep) label(ctx, prep, x + w / 2, y + height - Math.max(8, prepSize / 2), prepSize, prepColor,
+    { align: 'center', maxWidth: w - 10 });
 }

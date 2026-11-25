@@ -139,7 +139,7 @@ const kitchenBackdrops = {};
 function drawFurniture(ctx, state) {
   const cover = state.shot === 'cover';
   drawCounterSign(ctx);
-  for (const crate of pantry) drawCrate(ctx, crate, cover);
+  for (const crate of pantry) drawCrate(ctx, crate, cover, cover || !state.staged);
   drawWorkstations(ctx, state, cover);
   if (cover) drawPrepIsland(ctx);
 }
@@ -162,15 +162,15 @@ function drawPrepIsland(ctx) {
   }
 }
 
-function drawCrate(ctx, crate, cover) {
+function drawCrate(ctx, crate, cover, largerLabels) {
   const { id, x, y, w, h } = crate;
   panel(ctx, x - 1, y + 8, w + 2, h, 8, '#102522b0');
   panel(ctx, x, y, w, h, 7, '#a66c43', '#503e2d');
   panel(ctx, x + 5, y + 3, w - 10, 53, 4, '#ca9865', '#e4b879');
   panel(ctx, x + 10, y + 8, w - 20, 45, 4, '#956848');
   for (let i = 0; i < 3; i++) stroke(ctx, '#b38158', 1, [[x + 12, y + 17 + 14 * i], [x + w - 12, y + 17 + 14 * i]]);
-  drawCrateContents(ctx, id, x + w / 2, y + 30);
-  drawCrateLabel(ctx, crate, ingredients[id], cover);
+  drawCrateContents(ctx, id, x + w / 2, y + (largerLabels ? 26 : 30));
+  drawCrateLabel(ctx, crate, ingredients[id], cover, largerLabels);
 }
 
 function drawCrateContents(ctx, id, x, y) {
@@ -188,10 +188,14 @@ function drawCounterSign(ctx) {
   drawKitchenSign(ctx, 'COUNTER INGREDIENTS', 51, 216, 302, 29);
 }
 
-function drawCrateLabel(ctx, crate, data, cover) {
+function drawCrateLabel(ctx, crate, data, cover, largerLabels) {
   const { x, y, w } = crate;
   const prep = { pour: 'POUR', cook: 'COOK', chop: 'CHOP', both: 'CHOP + COOK' }[data.route];
-  drawKitchenSign(ctx, data.name, x + 6, y + 53, w - 12, 35, { size: cover ? 20 : 18, prep, prepSize: cover ? 13 : 11 });
+  const height = largerLabels ? 45 : 35;
+  drawKitchenSign(ctx, data.name, x + 6, y + 88 - height, w - 12, height, {
+    size: cover ? 20 : 18, prep, prepSize: largerLabels ? 26 : 11,
+    prepColor: largerLabels ? '#fff0c9' : undefined,
+  });
 }
 
 function drawServiceFooter(ctx, state) {

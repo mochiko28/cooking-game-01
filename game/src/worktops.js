@@ -4,9 +4,10 @@ import { burnTime, burners, ingredients, simmerSeconds, sink, stovePhase, workto
 import { drawDish, drawIngredient, drawKitchenSign, drawWoodGrain, label, meter, oval, panel, stroke } from './paint.js';
 
 export function drawWorkstations(ctx, state, cover) {
+  const largerLabels = cover || !state.staged;
   for (const station of worktops) drawWorktop(ctx, station);
-  drawSink(ctx, cover);
-  drawChopBoard(ctx, state);
+  drawSink(ctx, largerLabels);
+  drawChopBoard(ctx, state, largerLabels);
 }
 
 function drawStationShadow(ctx, x, y, w, h) {
@@ -29,7 +30,7 @@ function drawWorktop(ctx, station) {
   drawStationSign(ctx, station);
 }
 
-function drawChopBoard(ctx, state) {
+function drawChopBoard(ctx, state, largerLabels) {
   panel(ctx, 57, 622, 214, 77, 9, '#8a562f', '#72492f', 3);
   panel(ctx, 61, 622, 206, 71, 7, '#ae763f', '#edb471');
   for (const y of [634, 672, 685]) stroke(ctx, '#d4995c', 1.5, [[70, y], [254, y]]);
@@ -75,7 +76,7 @@ function drawChopBoard(ctx, state) {
   if (cover || sinceCut < .58) drawChopPop(ctx, swing, state.board.cuts, cover);
   meter(ctx, 62, 703, 204, 6, state.board.cuts / 4, '#335a45', '#9e6c48');
   const status = state.board.cuts === 4 ? 'PICK UP' : state.board.food ? `${state.board.cuts} / 4 CUTS` : 'HOLD TO CHOP';
-  label(ctx, status, 164, 721, cover ? 18 : 16, '#3b2b20', { align: 'center' });
+  label(ctx, status, 164, 721, largerLabels ? 26 : 16, '#3b2b20', { align: 'center', maxWidth: 204 });
 }
 
 function drawChopPop(ctx, age, cuts, cover) {
@@ -88,13 +89,14 @@ function drawChopPop(ctx, age, cuts, cover) {
   ctx.restore();
 }
 
-function drawSink(ctx, cover) {
+function drawSink(ctx, largerLabels) {
   drawStationShadow(ctx, sink.x, sink.y, sink.w, sink.h);
   panel(ctx, sink.x, sink.y, sink.w, sink.h, 7, '#90afa3', '#c4c8a4');
   panel(ctx, sink.x + 7, sink.y + 13, 44, 47, 8, '#496e65', '#d4d9b9');
   stroke(ctx, '#d4d7b6', 4, [[1216, 428], [1216, 439], [1207, 439], [1207, 449]]);
   oval(ctx, 1210, 465, 5, 5, '#b0c9b5');
-  drawKitchenSign(ctx, 'Sink', 1186, 481, 46, 22, { size: cover ? 16 : 14 });
+  drawKitchenSign(ctx, 'Sink', largerLabels ? 1182 : 1186, largerLabels ? 478 : 481,
+    largerLabels ? 54 : 46, largerLabels ? 29 : 22, { size: largerLabels ? 26 : 14 });
 }
 
 function drawStationSign(ctx, station) {
@@ -104,10 +106,13 @@ function drawStationSign(ctx, station) {
 
 export function drawStove(ctx, state) {
   const motion = state.shot === 'cover' ? state.coverMotion : null;
-  for (const { index, standX } of burners) drawBurner(ctx, state.pots[index], index, standX, 660, 1, state.elapsed, motion);
+  const largerLabels = motion !== null || !state.staged;
+  for (const { index, standX } of burners) {
+    drawBurner(ctx, state.pots[index], index, standX, 660, 1, state.elapsed, motion, { largerLabels });
+  }
 }
 
-export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = null, { showDetails = true } = {}) {
+export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = null, { showDetails = true, largerLabels = false } = {}) {
   const phase = stovePhase(pot);
   const countdown = burnTime(pot);
   const warning = phase === 'cooked' && countdown <= 2;
@@ -144,10 +149,12 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = 
     const words = { empty: 'EMPTY', simmering: 'SIMMERING', cooked: 'LIFT NOW', burnt: 'BURNT' };
     const progress = phase === 'cooked' ? countdown / 7 : phase === 'simmering' ? pot.age / simmerSeconds : 0;
     meter(ctx, -60, 36, 120, 6, progress, warning ? '#ff785e' : colors[phase], '#6d5944');
-    panel(ctx, -62, 46, 124, 23, 5, warning || burning ? '#a53125' : '#263630');
+    const statusWidth = largerLabels ? 132 : 124;
+    panel(ctx, -statusWidth / 2, 46, statusWidth, largerLabels ? 27 : 23, 5,
+      warning || burning ? '#a53125' : '#263630');
     const status = burning ? 'BURNING' : warning ? `BURN ${Math.ceil(countdown)}s` : words[phase];
-    const statusSize = coverMotion === null ? 16 : burning ? 22 : 18;
-    label(ctx, status, 0, 58, statusSize, warning || burning ? '#fff0cf' : colors[phase], { align: 'center' });
+    label(ctx, status, 0, largerLabels ? 60 : 58, largerLabels ? 26 : 16,
+      warning || burning ? '#fff0cf' : colors[phase], { align: 'center', maxWidth: statusWidth - 8 });
   }
   ctx.restore();
 }
@@ -173,24 +180,32 @@ export function platingRecipe(state) {
 export function drawPlating(ctx, state) {
   const { layers, queuedPlate } = state;
   const cover = state.shot === 'cover';
+  const largerLabels = cover || !state.staged;
   const recipe = platingRecipe(state);
   const resting = queuedPlate && !layers.length;
-  panel(ctx, 589, 619, 182, 109, 7, '#41665a', '#31493d');
-  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[597, y], [763, y]]);
+  const listX = largerLabels ? 751 : 772;
+  panel(ctx, 589, 619, listX - 590, 109, 7, '#41665a', '#31493d');
+  for (let y = 626; y < 724; y += 10) stroke(ctx, '#b9d1ac33', 1.2, [[597, y], [listX - 9, y]]);
   const bounce = Math.max(0, 1 - (state.elapsed - state.platePop) * 7) * .13;
-  drawDish(ctx, resting ? queuedPlate.layers : layers, 679, 659, 1.78 + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
+  drawDish(ctx, resting ? queuedPlate.layers : layers, largerLabels ? 670 : 679, 659,
+    (largerLabels ? 1.6 : 1.78) + bounce, resting ? queuedPlate.color : recipe.color, resting ? queuedPlate.shape : recipe.shape);
+  if (cover) drawFallingGreens(ctx, state.coverMotion);
   const checklist = resting ? queuedPlate : recipe;
   drawKitchenSign(ctx, resting ? 'ON TRAY' : layers.length ? 'DISH IN PROGRESS' : 'NEXT DISH',
-    772, 618, 153, 22, { size: cover ? 15 : 14 });
+    listX, 618, 925 - listX, 22, { size: largerLabels ? 20 : 14 });
+  const rowHeight = largerLabels ? 23 : 19;
   checklist.layers.forEach((id, i) => {
     const done = resting || i < layers.length;
     const next = !resting && i === layers.length;
-    if (next) panel(ctx, 773, 644 + i * 19, 151, 19, 4, '#ffe5ae');
-    label(ctx, done ? '✓' : next ? '›' : '·', 781, 653 + i * 19, 19, done ? '#254f39' : '#6f452e');
-    label(ctx, ingredients[id].name, 797, 653 + i * 19, cover ? 18 : 16, '#302d23');
-    if (next) label(ctx, 'NEXT', 918, 653 + i * 19, cover ? 12 : 10, '#78502e', { align: 'right' });
+    const rowY = 653 + i * rowHeight;
+    if (next) panel(ctx, listX + 1, rowY - Math.floor(rowHeight / 2), 923 - listX, rowHeight, 4, '#ffe5ae');
+    label(ctx, done ? '✓' : next ? '›' : '·', listX + (largerLabels ? 7 : 9), rowY,
+      largerLabels ? 22 : 19, done ? '#254f39' : '#6f452e');
+    label(ctx, ingredients[id].name, listX + 25, rowY, largerLabels ? 26 : 16, '#302d23',
+      { maxWidth: next ? 80 : 918 - listX - 25 });
+    if (next) label(ctx, 'NEXT', largerLabels ? 920 : 918, rowY, largerLabels ? 26 : 10, largerLabels ? '#5a3c25' : '#78502e',
+      { align: 'right', maxWidth: 59 });
   });
-  if (cover) drawFallingGreens(ctx, state.coverMotion);
 }
 
 function drawFallingGreens(ctx, motion) {
@@ -207,6 +222,7 @@ function drawFallingGreens(ctx, motion) {
 
 export function drawPass(ctx, state) {
   const cover = state.shot === 'cover';
+  const largerLabels = cover || !state.staged;
   if (cover) {
     const vip = state.orders.find(ticket => ticket.recipe.id === 'gold');
     if (vip) drawQueuedCustomer(ctx, Math.ceil(vip.left - state.coverMotion * 4), state.coverMotion);
@@ -227,8 +243,10 @@ export function drawPass(ctx, state) {
   else drawSteam(ctx, 1044, 649, steamTime);
   drawReadySparkles(ctx, 1044, 665, steamTime);
   if (cover) drawReadyRing(ctx, state.coverMotion);
-  drawKitchenSign(ctx, 'Ready', 1138, 642, 82, 36, { size: 22 });
-  label(ctx, state.ready.name, 1179, 698, cover ? 18 : 16, '#ffe5b7', { align: 'center' });
+  const readyX = largerLabels ? 1169 : 1179;
+  const signWidth = largerLabels ? 104 : 82;
+  drawKitchenSign(ctx, 'Ready', readyX - signWidth / 2, 642, signWidth, 36, { size: largerLabels ? 26 : 22 });
+  label(ctx, state.ready.name, readyX, 698, largerLabels ? 26 : 16, '#ffe5b7', { align: 'center', maxWidth: 120 });
 }
 
 function drawReadySteam(ctx, motion) {
@@ -261,7 +279,7 @@ function drawQueuedCustomer(ctx, seconds, motion) {
 
   panel(ctx, 1109, 399, 66, 32, 10, '#7e352d', '#ffd08a', 2);
   stroke(ctx, '#ffd08a', 2, [[1141, 431], [1149, 439], [1150, 431]]);
-  label(ctx, `${seconds} s`, 1142, 415, 23, '#fff0ce', { align: 'center' });
+  label(ctx, `${seconds} s`, 1142, 415, 26, '#fff0ce', { align: 'center', maxWidth: 58 });
   ctx.restore();
 }
 

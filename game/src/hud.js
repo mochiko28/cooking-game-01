@@ -15,6 +15,7 @@ export function drawServiceHud(ctx, state) {
 
   const rushCover = state.shot === 'cover';
   const live = !state.staged && state.screen === 'play';
+  const scoreSize = rushCover || !state.staged ? 26 : 16;
   panel(ctx, 564, 15, 223, 69, 9, rushCover ? '#5c3428' : '#213e33', rushCover ? '#d88f52' : '#49675a');
   if (live && wave === serviceWaves.at(-1)) drawLastCall(ctx, waveName, 675, 36, 24, state.elapsed);
   else label(ctx, rushCover ? `${waveName} ${waveIndex + 1}/${serviceWaves.length}` : waveName, 675, 36, 24, wave.color, { align: 'center' });
@@ -40,9 +41,9 @@ export function drawServiceHud(ctx, state) {
   oval(ctx, 1058, 37, 11, 11, '#eeb667', '#ffdb8a');
   label(ctx, '$', 1058, 38, 14, '#5e3928', { align: 'center' });
   label(ctx, String(state.coins), 1075, 37, 25, palette.light);
-  label(ctx, `${state.served} served`, 1246, 37, rushCover ? 22 : 16, '#cbdbc3', { align: 'right' });
+  label(ctx, `${state.served} served`, 1246, 37, scoreSize, '#cbdbc3', { align: 'right', maxWidth: 113 });
   label(ctx, `×${comboMultiplier(state.combo)} TIPS`, 1050, 66, 20, palette.gold);
-  label(ctx, `${state.combo} streak`, 1246, 66, rushCover ? 22 : 16, palette.light, { align: 'right' });
+  label(ctx, `${state.combo} streak`, 1246, 66, scoreSize, palette.light, { align: 'right', maxWidth: 113 });
 
   drawOrderBoard(ctx, state);
 }
@@ -169,9 +170,9 @@ function drawIncoming(ctx, ticket, x, motion) {
   ctx.clip();
   drawTicket(ctx, ticket, x + offset, false, motion);
   ctx.restore();
-  const chipX = 1120 + Math.min(10, Math.round(offset * .23));
-  panel(ctx, chipX, 95, 112, 20, 6, '#bc5038', '#ffd083', 1.5);
-  label(ctx, '+1 ORDER', chipX + 56, 105, 17, '#fff1d1', { align: 'center' });
+  const chipX = 1114 + Math.min(10, Math.round(offset * .23));
+  panel(ctx, chipX, 92, 134, 25, 6, '#933929', '#ffd083', 1.5);
+  label(ctx, '+1 ORDER', chipX + 67, 104, 26, '#fff1d1', { align: 'center', maxWidth: 124 });
 }
 
 export function ticketAt(state, x, y) {
