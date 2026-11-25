@@ -1,10 +1,10 @@
 // Stages the four screenshot scenes and draws the rush showcase.
-import { recipes, spawnOrder } from './orders.js';
+import { recipes, spawnOrder, ticketCapacity } from './orders.js';
 import { readShiftClock, serviceWave, serviceWaves, shiftLength } from './shift.js';
 import { estimateRouteSeconds } from './route.js';
-import { burners, chopIngredient, coverIsland, moveParticles, simmerSeconds, worktops } from './stations.js';
+import { burners, chopIngredient, coverIsland, ingredients, moveParticles, worktops } from './stations.js';
 import { drawBurner, drawRoom, routePoint, routeSegment } from './kitchen.js';
-import { drawDish, label, meter, oval, palette, panel } from './paint.js';
+import { label, meter, oval, palette, panel } from './paint.js';
 
 export function stageScreenshot(state, scene) {
   if (!['cover', 'rush', 'recipes', 'results'].includes(scene)) return;
@@ -109,84 +109,86 @@ export function drawRushView(ctx, state) {
   drawRoom(ctx);
   drawRushHeader(ctx, state.elapsed, state.rushMotion);
   drawRushRail(ctx, state.orders);
-  panel(ctx, 26, 384, 1228, 389, 14, '#b68051', '#f8c385', 3);
-  drawRushBurner(ctx, state, 0, 44, 735);
-  drawRushBurner(ctx, state, 1, 797, 438);
+  drawRushBurner(ctx, state, 0, 26);
+  drawRushBurner(ctx, state, 1, 650);
 }
 
 function drawRushHeader(ctx, elapsed, motion) {
   const wave = serviceWave(elapsed);
-  panel(ctx, 26, 20, 659, 117, 12, '#a73428', '#ff9365', 4);
-  label(ctx, wave.name.toUpperCase(), 355, 78, 95, '#fff0d5', { align: 'center', weight: 950 });
+  panel(ctx, 26, 20, 600, 117, 12, '#a73428', '#ff9365', 4);
+  label(ctx, wave.name.toUpperCase(), 326, 78, 92, '#fff0d5', { align: 'center', weight: 950 });
 
-  panel(ctx, 700, 20, 281, 117, 12, '#382d25', '#b87551', 3);
-  label(ctx, 'RUSH MAX', 840, 51, 34, '#ffdda8', { align: 'center' });
+  panel(ctx, 644, 20, 334, 117, 12, '#382d25', '#b87551', 3);
+  label(ctx, 'RUSH x2', 811, 57, 58, '#ffdda8', { align: 'center', weight: 900 });
   const intensity = (serviceWaves.indexOf(wave) + 1) / serviceWaves.length;
   for (let i = 0; i < 6; i++) {
-    const height = 17 + i * 6;
-    panel(ctx, 725 + i * 40, 113 - height, 30, height, 4, i / 6 < intensity ? '#ff9a61' : '#614138');
+    panel(ctx, 664 + i * 50, 91, 44, 26, 4, i / 6 < intensity ? '#ff9a61' : '#614138');
   }
 
   panel(ctx, 996, 20, 258, 117, 12, '#491913', '#ff775c', 4);
   ctx.save();
   for (const offset of [0, .5]) {
     const pulse = (motion + offset) % 1;
-    const w = 204 + pulse * 36;
-    const h = 68 + pulse * 16;
+    const w = 214 + pulse * 26;
+    const h = 84 + pulse * 14;
     ctx.globalAlpha = .8 - pulse * .6;
-    panel(ctx, 1125 - w / 2, 91 - h / 2, w, h, 25, null, '#ff674f', 5 - pulse * 2);
+    panel(ctx, 1125 - w / 2, 78 - h / 2, w, h, 22, null, '#ff674f', 5 - pulse * 2);
   }
   ctx.restore();
-  label(ctx, 'TIME LEFT', 1125, 40, 23, '#ffdda8', { align: 'center' });
-  label(ctx, readShiftClock(elapsed), 1125, 92, 70, '#ff705b', { align: 'center', face: 'monospace' });
+  label(ctx, readShiftClock(elapsed), 1125, 78, 78, '#ff826b', { align: 'center', face: 'monospace' });
 }
 
 function drawRushRail(ctx, orders) {
-  panel(ctx, 26, 148, 1228, 224, 11, '#1e342a', '#9a7455', 2);
-  label(ctx, 'ORDER BOARD', 39, 169, 29, palette.light);
-  label(ctx, `${orders.length} WAITING`, 1240, 169, 29, '#ffd098', { align: 'right' });
-  orders.forEach((ticket, i) => {
-    const x = 38 + (i % 3) * 404;
-    const y = 190 + Math.floor(i / 3) * 89;
+  panel(ctx, 26, 151, 1228, 254, 12, '#183029', '#9a7455', 2);
+  label(ctx, 'ORDER BOARD', 42, 178, 40, palette.light);
+  panel(ctx, 962, 157, 278, 45, 10, '#6b3427', '#f79365', 2);
+  label(ctx, `+${orders.length - ticketCapacity} waiting`, 1101, 178, 40, '#ffdfab', { align: 'center' });
+
+  orders.slice(0, ticketCapacity).forEach((ticket, i) => {
+    const x = 39 + i * 304;
+    const width = 290;
     const progress = ticket.left / ticket.patience;
     const urgent = progress <= .34;
-    panel(ctx, x, y, 396, 79, 8, '#ffebcb', urgent ? '#ff7959' : '#af9469', urgent ? 4 : 2);
-    panel(ctx, x + 6, y + 6, 102, 67, 5, ticket.recipe.color);
-    drawDish(ctx, ticket.recipe.layers, x + 57, y + 36, .79, ticket.recipe.color, ticket.recipe.shape);
-    label(ctx, ticket.recipe.name, x + 120, y + 27, 39, palette.ink);
-    meter(ctx, x + 120, y + 51, 262, 19, progress, urgent ? '#ff634b' : '#6ebf81', urgent ? '#79372e' : '#365547');
+    panel(ctx, x, 214, width, 177, 10, '#ffebcb', urgent ? '#ff7959' : '#dbac66', 4);
+    panel(ctx, x + 12, 225, width - 24, 7, 3, ticket.recipe.color);
+    const [first, ...rest] = ticket.recipe.name.split(' ');
+    label(ctx, first, x + width / 2, 265, 60, palette.ink, { align: 'center', weight: 900 });
+    label(ctx, rest.join(' '), x + width / 2, 325, 60, palette.ink, { align: 'center', weight: 900 });
+    meter(ctx, x + 16, 353, width - 32, 26, progress, urgent ? '#ff6954' : '#ffc260', urgent ? '#67302a' : '#58402d');
   });
 }
 
-function drawRushBurner(ctx, state, index, x, width) {
+function drawRushBurner(ctx, state, index, x) {
+  const width = 604;
   const cx = x + width / 2;
   const burning = index === 0;
   const pot = state.pots[index];
-  panel(ctx, x, 399, width, 357, 11, burning ? '#4e2a25' : '#29473b', burning ? '#e46c50' : '#7b9473', 4);
-  panel(ctx, x + 9, 407, width - 18, 58, 8, burning ? '#a73428' : '#3e6650');
-  label(ctx, burning ? 'POT BURNING' : 'SIMMERING', cx, 436, 49, '#fff0d5', { align: 'center' });
+  panel(ctx, x, 423, width, 355, 12, burning ? '#4e2a25' : '#233c32', burning ? '#e46c50' : '#7baf79', 4);
+  panel(ctx, x + 9, 432, width - 18, 80, 8, burning ? '#a73428' : '#356047');
+  label(ctx, burning ? 'BURNING' : 'SIMMERING', cx, 472, 66, burning ? '#fff0d5' : '#e5ffc9',
+    { align: 'center', weight: 950 });
 
   ctx.save();
   ctx.beginPath();
-  ctx.rect(x + 10, 465, width - 20, 230);
+  ctx.rect(x + 10, 512, width - 20, 195);
   ctx.clip();
   if (burning) {
-    const glow = ctx.createRadialGradient(cx, 588, 40, cx, 588, 230);
+    const glow = ctx.createRadialGradient(cx, 636, 40, cx, 636, 240);
     glow.addColorStop(0, '#f3a45b');
     glow.addColorStop(1, '#4e2a2500');
-    oval(ctx, cx, 580, 230, 145, glow);
+    oval(ctx, cx, 636, 240, 125, glow);
   }
-  drawBurner(ctx, pot, index, cx, 593, burning ? 3.35 : 2.85, state.elapsed);
+  drawBurner(ctx, pot, index, cx, 623, 2.57, state.elapsed, null, { showDetails: false });
+  if (burning) drawFireAndSmoke(ctx, cx, 675);
   ctx.restore();
-  if (burning) drawFireAndSmoke(ctx, cx, 659);
-  panel(ctx, x + 10, 695, width - 20, 53, 7, burning ? '#702f25' : '#29473b');
-  label(ctx, burning ? 'SHRIMP BURNT' : 'NOODLES', cx, 717, 34, burning ? '#ffcf9b' : '#ffe0a5', { align: 'center' });
-  if (!burning) meter(ctx, x + 19, 739, width - 38, 8, pot.age / simmerSeconds, '#f0b663', '#597662');
+  label(ctx, ingredients[pot.food.id].name.toUpperCase(), cx, 739, 63, '#ffebcb', { align: 'center', weight: 900 });
 }
 
 function drawFireAndSmoke(ctx, x, y) {
   ctx.save();
   ctx.translate(x, y);
+  ctx.save();
+  ctx.translate(0, 41);
   const smoke = ctx.createLinearGradient(0, -193, 0, -65);
   smoke.addColorStop(0, '#d2baa894');
   smoke.addColorStop(.58, '#8c7467e8');
@@ -203,6 +205,7 @@ function drawFireAndSmoke(ctx, x, y) {
   ctx.closePath();
   ctx.fillStyle = smoke;
   ctx.fill();
+  ctx.restore();
   for (const [dx, dy, scale] of [[-113, 3, .8], [-65, 24, 1], [-8, 27, .84], [49, 23, 1.08], [106, 7, .82]]) {
     ctx.save();
     ctx.translate(dx, dy);

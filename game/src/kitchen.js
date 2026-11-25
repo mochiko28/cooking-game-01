@@ -317,7 +317,7 @@ function drawStove(ctx, state) {
   for (const { index, standX } of burners) drawBurner(ctx, state.pots[index], index, standX, 660, 1, state.elapsed, motion);
 }
 
-export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = null) {
+export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = null, { showDetails = true } = {}) {
   const phase = stovePhase(pot);
   const countdown = burnTime(pot);
   const warning = phase === 'cooked' && countdown <= 2;
@@ -327,7 +327,7 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = 
   ctx.translate(x, y);
   ctx.scale(scale, scale);
   panel(ctx, -62, -42, 124, 73, 6, '#263630', warning || burning ? '#ff765b' : '#8c9b85', 2);
-  label(ctx, String(index + 1), -49, -29, coverMotion === null ? 14 : 16, '#f4deb3', { align: 'center' });
+  if (showDetails) label(ctx, String(index + 1), -49, -29, coverMotion === null ? 14 : 16, '#f4deb3', { align: 'center' });
   oval(ctx, 0, 3, 51, 25, '#142924', '#567267');
   oval(ctx, 0, 6, 43, 20, hot ? '#bd5e37' : '#425750');
   oval(ctx, 0, 6, 36, 16, null, hot ? '#f6aa5e' : '#73877b', 2.5);
@@ -349,14 +349,16 @@ export function drawBurner(ctx, pot, index, x, y, scale, elapsed, coverMotion = 
     drawSteam(ctx, 3, -13, elapsed + (coverMotion ?? 0), phase === 'burnt', coverMotion !== null);
     if (burning) drawSizzle(ctx, coverMotion);
   }
-  const colors = { empty: '#ead4ac', simmering: '#f7b66d', cooked: '#c8e49a', burnt: '#ff977d' };
-  const words = { empty: 'EMPTY', simmering: 'SIMMERING', cooked: 'LIFT NOW', burnt: 'BURNT' };
-  const progress = phase === 'cooked' ? countdown / 7 : phase === 'simmering' ? pot.age / simmerSeconds : 0;
-  meter(ctx, -60, 36, 120, 6, progress, warning ? '#ff785e' : colors[phase], '#6d5944');
-  panel(ctx, -62, 46, 124, 23, 5, warning || burning ? '#a53125' : '#263630');
-  const status = burning ? 'BURNING' : warning ? `BURN ${Math.ceil(countdown)}s` : words[phase];
-  const statusSize = coverMotion === null ? 16 : burning ? 22 : 18;
-  label(ctx, status, 0, 58, statusSize, warning || burning ? '#fff0cf' : colors[phase], { align: 'center' });
+  if (showDetails) {
+    const colors = { empty: '#ead4ac', simmering: '#f7b66d', cooked: '#c8e49a', burnt: '#ff977d' };
+    const words = { empty: 'EMPTY', simmering: 'SIMMERING', cooked: 'LIFT NOW', burnt: 'BURNT' };
+    const progress = phase === 'cooked' ? countdown / 7 : phase === 'simmering' ? pot.age / simmerSeconds : 0;
+    meter(ctx, -60, 36, 120, 6, progress, warning ? '#ff785e' : colors[phase], '#6d5944');
+    panel(ctx, -62, 46, 124, 23, 5, warning || burning ? '#a53125' : '#263630');
+    const status = burning ? 'BURNING' : warning ? `BURN ${Math.ceil(countdown)}s` : words[phase];
+    const statusSize = coverMotion === null ? 16 : burning ? 22 : 18;
+    label(ctx, status, 0, 58, statusSize, warning || burning ? '#fff0cf' : colors[phase], { align: 'center' });
+  }
   ctx.restore();
 }
 
