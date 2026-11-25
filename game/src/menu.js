@@ -23,13 +23,13 @@ export function renderScreen(element, state) {
     drawDish(canvas.getContext('2d'), recipe.layers, canvas.width / 2, canvas.height * .46, canvas.width / 120, recipe.color, recipe.shape);
   }
   for (const canvas of element.querySelectorAll('[data-food]')) {
-    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 2, 'ready');
+    drawIngredient(canvas.getContext('2d'), canvas.dataset.food, canvas.width / 2, canvas.height / 2, 2.4, 'ready');
   }
 }
 
 function recipeBook(staged) {
-  const first = recipes.find(recipe => recipe.id === (staged ? 'garden' : 'harvest'));
-  const second = recipes.find(recipe => recipe.id === (staged ? 'harvest' : 'ember'));
+  const first = recipes.find(recipe => recipe.id === 'garden');
+  const second = recipes.find(recipe => recipe.id === 'tide');
   const shared = 'greens';
   const multiplier = comboBonusForSharedPrep(first, second);
   return `<div class="sheet book-sheet${staged ? ' recipe-showcase' : ''}">
@@ -41,7 +41,7 @@ function recipeBook(staged) {
       ${recipes.map(recipe => `<li class="recipe-card${recipe === first || recipe === second ? ' combo-card' : ''}" style="--recipe-color:${recipe.color}">
         <div class="recipe-title">
           <h2>${recipe.name}</h2>
-          <canvas width="128" height="75" data-dish="${recipe.id}" aria-hidden="true"></canvas>
+          <canvas width="60" height="37" data-dish="${recipe.id}" aria-hidden="true"></canvas>
         </div>
         <ol class="recipe-layers" aria-label="Assembly order">
           ${recipe.layers.map(id => {
@@ -49,7 +49,7 @@ function recipeBook(staged) {
             const linked = (recipe === first || recipe === second) && id === shared;
             return `<li${linked ? ' class="shared-ingredient"' : ''} title="${food.name} · ${ingredientPrepLabel[food.route]}">
               <span class="visually-hidden">${food.name}, ${ingredientPrepLabel[food.route]}</span>
-              <canvas width="128" height="115" data-food="${id}" aria-hidden="true"></canvas>
+              <canvas width="148" height="130" data-food="${id}" aria-hidden="true"></canvas>
             </li>`;
           }).join('')}
         </ol>

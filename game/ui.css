@@ -112,7 +112,7 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .book-sheet {
   --shared-ingredient: #defb83;
   width: 1248px;
-  padding: 12px 18px 14px;
+  padding: 8px 18px 9px;
   background: #213e31;
 }
 .sheet-header {
@@ -127,38 +127,40 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   text-transform: uppercase;
 }
 .book-sheet h1 { color: #ffd081; }
-.book-sheet .sheet-header { margin-bottom: 10px; }
+.book-sheet .sheet-header { margin-bottom: 7px; }
 .book-sheet .quiet { font-size: 25px; }
 .recipe-grid {
-  --recipe-gap: 11px;
-  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--recipe-gap);
+  gap: 7px 11px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .recipe-card {
-  padding: 4px 10px 7px;
+  padding: 0 6px 2px;
   background: #ffe9c7;
-  border: 2px solid #e5b986;
+  border: 3px solid #e5b986;
   border-radius: 12px;
   color: #27392e;
 }
+.recipe-card.combo-card {
+  border-color: var(--shared-ingredient);
+  box-shadow: inset 0 0 0 2px var(--shared-ingredient);
+}
 .recipe-card h2 {
-  margin: 0 4px;
-  font-size: 68px;
+  margin: 0 2px;
+  font-size: 82px;
   font-weight: 900;
   letter-spacing: -.05em;
-  line-height: 1;
+  line-height: .85;
+  white-space: nowrap;
 }
 .recipe-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 3px;
+  gap: 4px;
 }
 .recipe-title > canvas {
   display: block;
@@ -169,42 +171,30 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .recipe-layers {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 12px;
   list-style: none;
   margin: 0;
   padding: 0;
 }
 .recipe-layers li {
   position: relative;
-  width: 128px;
-  height: 84px;
+  width: 136px;
+  height: 110px;
   background: #274537;
   border-radius: 7px;
 }
 .recipe-layers .shared-ingredient {
-  box-shadow: inset 0 0 0 6px var(--shared-ingredient);
   background: #1b3d31;
+  box-shadow: inset 0 0 0 2px var(--shared-ingredient);
 }
-.combo-card .recipe-layers { justify-content: flex-end; }
-/* The two highlighted tiles sit at the same right offset in the last row. */
-.book-sheet:not(.recipe-showcase) .recipe-grid::after {
-  position: absolute;
-  z-index: 1;
-  bottom: -7px;
-  right: 73px;
-  width: calc((100% + var(--recipe-gap)) / 2 + 6px);
-  height: 21px;
-  box-sizing: border-box;
-  border: 6px solid var(--shared-ingredient);
-  border-top: 0;
-  border-radius: 0 0 8px 8px;
-  pointer-events: none;
-  content: '';
+.recipe-layers .shared-ingredient canvas {
+  filter: drop-shadow(0 0 8px var(--shared-ingredient));
 }
 .recipe-layers li + li::before {
   position: absolute;
+  z-index: 1;
   top: 50%;
-  left: -10px;
+  left: -6px;
   transform: translate(-50%, -54%);
   content: '+' / '';
   color: #64432e;
@@ -214,11 +204,12 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 .recipe-layers canvas {
   position: absolute;
   top: 50%;
-  left: 0;
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
+.recipe-layers canvas[data-food="shrimp"] { height: 110px; }
 .book-sheet .recipe-combo {
-  margin-top: 16px;
+  margin-top: 9px;
   padding: 5px 12px 7px;
   border: 2px solid #779556;
   border-radius: 10px;
@@ -236,14 +227,12 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
 
 .recipe-showcase {
   --shared-ingredient: #e3ff76;
-  padding-block: 8px 9px;
+  padding-block: 4px 5px;
 }
 .recipe-showcase h1 { font-size: 57px; }
 .recipe-showcase .sheet-header { margin-bottom: 5px; }
-.recipe-showcase .recipe-grid { row-gap: 7px; }
 .recipe-showcase .recipe-combo {
-  margin-top: 14px;
-  padding: 11px 12px 13px;
+  padding: 5px 12px 7px;
   border: 3px solid #f3ffba;
   background: var(--shared-ingredient);
   color: #203b27;
@@ -253,32 +242,6 @@ button:focus-visible { outline: 3px solid #ffa86e; outline-offset: 5px; }
   color: #122b22;
   font-size: 70px;
   font-weight: 950;
-}
-/* The center gutter carries the line from the strip to the two left-column tiles. */
-.recipe-showcase .recipe-grid::after {
-  position: absolute;
-  z-index: 1;
-  top: 126px;
-  bottom: -16px;
-  left: 50%;
-  width: 7px;
-  transform: translateX(-50%);
-  background: var(--shared-ingredient);
-  pointer-events: none;
-  content: '';
-}
-.recipe-showcase .shared-ingredient::after {
-  position: absolute;
-  z-index: 1;
-  top: 50%;
-  right: -18px;
-  width: 39px;
-  height: 30px;
-  transform: translateY(-50%);
-  background: var(--shared-ingredient);
-  clip-path: polygon(0 50%, 37% 0, 37% 36%, 100% 36%, 100% 64%, 37% 64%, 37% 100%);
-  pointer-events: none;
-  content: '';
 }
 
 .results-sheet {
